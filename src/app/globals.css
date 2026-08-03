@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --surface: #f8f9fa;
+  --border: #e5e7eb;
+  --foreground: #1f2937;
+  --secondary: #6b7280;
+  --primary: #e53935;
+  --primary-hover: #c62828;
+
+  --reaction-been-there: #6b7280;
+  --reaction-same: #c68e5e;
+  --reaction-red-flag: #e63946;
+  --reaction-escaped: #22c55e;
+  --reaction-corporate: #8b5cf6;
+}
+
+:root[data-theme="dark"] {
+  --background: #0f0f0f;
+  --surface: #1a1a1a;
+  --border: #2c2c2c;
+  --foreground: #f5f5f5;
+  --secondary: #9ca3af;
+  --primary: #ff4d4d;
+  --primary-hover: #ff6b6b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-secondary: var(--secondary);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@keyframes rage-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-2px, 1px) rotate(-1deg); }
+  40% { transform: translate(2px, -1px) rotate(1deg); }
+  60% { transform: translate(-2px, -1px) rotate(0deg); }
+  80% { transform: translate(2px, 1px) rotate(1deg); }
+}
+
+.rage-shake {
+  animation: rage-shake 0.4s ease-in-out 2;
+}
