@@ -9,6 +9,7 @@ export async function createPost(formData: FormData) {
   const role = String(formData.get("role") ?? "").trim();
   const company = String(formData.get("company") ?? "").trim();
   const tags = formData.getAll("tags").map(String);
+  const isAnonymous = formData.get("anonymous") === "on";
 
   if (!body) return { error: "Say something first." };
 
@@ -25,6 +26,7 @@ export async function createPost(formData: FormData) {
     role: role || null,
     company: company || null,
     tags,
+    is_anonymous: isAnonymous,
   });
 
   if (error) return { error: error.message };

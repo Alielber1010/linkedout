@@ -8,6 +8,7 @@ export function ComposeBox() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [anonymous, setAnonymous] = useState(false);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -27,6 +28,7 @@ export function ComposeBox() {
       }
       setError(null);
       setSelectedTags([]);
+      setAnonymous(false);
       formRef.current?.reset();
       setOpen(false);
     });
@@ -79,9 +81,18 @@ export function ComposeBox() {
             {error && <p className="text-sm text-primary">{error}</p>}
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-secondary">
-                Posted anonymously. Always.
-              </span>
+              <label className="flex items-center gap-1.5 text-xs text-secondary cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="anonymous"
+                  checked={anonymous}
+                  onChange={(e) => setAnonymous(e.target.checked)}
+                  className="accent-primary"
+                />
+                {anonymous
+                  ? "Posting anonymously"
+                  : "Posting under your profile"}
+              </label>
               <button
                 type="submit"
                 disabled={pending}

@@ -15,13 +15,8 @@ export function WelcomeToast() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      let userId = session?.user?.id;
-
-      if (!userId) {
-        const { data, error } = await supabase.auth.signInAnonymously();
-        if (error || !data.user) return;
-        userId = data.user.id;
-      }
+      const userId = session?.user?.id;
+      if (!userId) return;
 
       if (localStorage.getItem("welcomed")) return;
 

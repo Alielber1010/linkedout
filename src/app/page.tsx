@@ -27,7 +27,7 @@ export default async function Home({
   let query = supabase
     .from("posts")
     .select(
-      "id, body, role, company, tags, created_at, profiles!posts_profile_id_fkey(user_number), reactions(profile_id, reaction_type)"
+      "id, body, role, company, tags, created_at, is_anonymous, profiles!posts_profile_id_fkey(user_number, display_name, headline), reactions(profile_id, reaction_type)"
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -71,6 +71,9 @@ export default async function Home({
                 tags={post.tags ?? []}
                 createdAt={post.created_at}
                 userNumber={profile?.user_number ?? 0}
+                displayName={profile?.display_name ?? null}
+                headline={profile?.headline ?? null}
+                isAnonymous={post.is_anonymous}
                 counts={counts}
                 mine={mine}
               />

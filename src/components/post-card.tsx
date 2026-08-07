@@ -20,6 +20,9 @@ export function PostCard({
   tags,
   createdAt,
   userNumber,
+  displayName,
+  headline,
+  isAnonymous,
   counts,
   mine,
 }: {
@@ -30,13 +33,22 @@ export function PostCard({
   tags: string[];
   createdAt: string;
   userNumber: number;
+  displayName: string | null;
+  headline: string | null;
+  isAnonymous: boolean;
   counts: Record<ReactionType, number>;
   mine: ReactionType | null;
 }) {
+  const identity =
+    !isAnonymous && displayName ? displayName : `Anonymous #${userNumber}`;
+
   return (
     <article className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-center gap-2 flex-wrap text-sm">
-        <span className="font-semibold">Anonymous #{userNumber}</span>
+        <span className="font-semibold">{identity}</span>
+        {!isAnonymous && headline && (
+          <span className="text-xs text-secondary">{headline}</span>
+        )}
         {role && (
           <span className="rounded-full border border-border px-2 py-0.5 text-xs text-secondary">
             {role}
