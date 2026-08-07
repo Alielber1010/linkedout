@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "LinkedOut — Disconnect from the corporate bullshit",
   description:
     "The professional network for people who have drafts they never sent.",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -37,11 +40,21 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-          <div className="mx-auto max-w-2xl px-4 h-14 flex items-center justify-between">
-            <a href="/" className="flex items-center gap-2 font-bold text-lg">
-              <span className="text-primary">Linked</span>
-              <span>Out</span>
-              <span aria-hidden>⛓️‍💥</span>
+          <div className="mx-auto max-w-2xl px-4 py-2 flex items-center justify-between gap-4">
+            <a href="/" className="flex flex-col shrink-0">
+              <img
+                src="/logo-light.png"
+                alt="LinkedOut"
+                className="h-7 w-auto logo-light-img"
+              />
+              <img
+                src="/logo-dark.png"
+                alt="LinkedOut"
+                className="h-7 w-auto logo-dark-img"
+              />
+              <span className="text-[11px] italic text-secondary leading-tight">
+                Leave Your Positivity at the Door.
+              </span>
             </a>
             <ThemeToggle />
           </div>
