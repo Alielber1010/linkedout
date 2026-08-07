@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeScript } from "@/components/theme-script";
 import { WelcomeToast } from "@/components/welcome-toast";
-import { HeaderNav } from "@/components/header-nav";
+import { SideNav } from "@/components/side-nav";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -34,6 +34,7 @@ export default async function RootLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const signedIn = Boolean(user);
 
   return (
     <html
@@ -45,36 +46,45 @@ export default async function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-          <div className="mx-auto max-w-2xl px-4 flex items-end justify-between gap-4">
-            <a href="/" className="flex flex-col shrink-0 py-2">
-              <img
-                src="/logo-light.png"
-                alt="LinkedOut"
-                className="h-7 w-auto logo-light-img"
-              />
-              <img
-                src="/logo-dark.png"
-                alt="LinkedOut"
-                className="h-7 w-auto logo-dark-img"
-              />
-              <span className="text-[11px] italic text-secondary leading-tight">
-                Leave Your Positivity at the Door.
-              </span>
-            </a>
-            <HeaderNav signedIn={Boolean(user)} />
-          </div>
-        </header>
-        <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-6">
-          {children}
-        </main>
-        <footer className="border-t border-border py-4">
-          <div className="mx-auto max-w-2xl px-4 text-center text-xs text-secondary">
-            <a href="/privacy" className="hover:text-primary hover:underline">
-              Privacy &amp; Terms
-            </a>
-          </div>
-        </footer>
+        <SideNav signedIn={signedIn} />
+        <div
+          className={`flex-1 flex flex-col ${
+            signedIn ? "sm:pl-16 lg:pl-20 pb-14 sm:pb-0" : ""
+          }`}
+        >
+          <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+            <div className="mx-auto max-w-2xl px-4 py-2">
+              <a href="/" className="flex flex-col shrink-0 w-fit">
+                <img
+                  src="/logo-light.png"
+                  alt="LinkedOut"
+                  className="h-7 w-auto logo-light-img"
+                />
+                <img
+                  src="/logo-dark.png"
+                  alt="LinkedOut"
+                  className="h-7 w-auto logo-dark-img"
+                />
+                <span className="text-[11px] italic text-secondary leading-tight">
+                  Leave Your Positivity at the Door.
+                </span>
+              </a>
+            </div>
+          </header>
+          <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-6">
+            {children}
+          </main>
+          <footer className="border-t border-border py-4">
+            <div className="mx-auto max-w-2xl px-4 text-center text-xs text-secondary">
+              <a
+                href="/privacy"
+                className="hover:text-primary hover:underline"
+              >
+                Privacy &amp; Terms
+              </a>
+            </div>
+          </footer>
+        </div>
         <WelcomeToast />
       </body>
     </html>

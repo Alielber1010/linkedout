@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { createPost } from "@/app/actions";
 import { TAGS } from "@/lib/tags";
 
@@ -11,6 +11,19 @@ export function ComposeBox() {
   const [anonymous, setAnonymous] = useState(false);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    function focusIfRequested() {
+      if (window.location.hash === "#compose") {
+        setOpen(true);
+        requestAnimationFrame(() => textareaRef.current?.focus());
+      }
+    }
+    focusIfRequested();
+    window.addEventListener("hashchange", focusIfRequested);
+    return () => window.removeEventListener("hashchange", focusIfRequested);
+  }, []);
 
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>
@@ -35,9 +48,10 @@ export function ComposeBox() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4 mb-6">
+    <div id="compose" className="rounded-xl border border-border bg-surface p-4 mb-6 scroll-mt-20">
       <form ref={formRef} action={handleSubmit}>
         <textarea
+          ref={textareaRef}
           name="body"
           rows={open ? 4 : 2}
           onFocus={() => setOpen(true)}
