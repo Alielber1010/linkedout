@@ -52,25 +52,6 @@ export default async function RootLayout({
             signedIn ? "sm:pl-16 lg:pl-20 pb-14 sm:pb-0" : ""
           }`}
         >
-          <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-            <div className="mx-auto max-w-2xl px-4 py-2">
-              <a href="/" className="flex flex-col shrink-0 w-fit">
-                <img
-                  src="/logo-light.png"
-                  alt="LinkedOut"
-                  className="h-7 w-auto logo-light-img"
-                />
-                <img
-                  src="/logo-dark.png"
-                  alt="LinkedOut"
-                  className="h-7 w-auto logo-dark-img"
-                />
-                <span className="text-[11px] italic text-secondary leading-tight">
-                  Leave Your Positivity at the Door.
-                </span>
-              </a>
-            </div>
-          </header>
           <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-6">
             {children}
           </main>

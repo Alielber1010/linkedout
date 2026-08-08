@@ -1,9 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Home, User, SquarePen } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { SignOutButton } from "@/components/sign-out-button";
+import { Home, Search, User, Settings, SquarePen } from "lucide-react";
 
 const itemClass =
   "flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-full transition-colors hover:bg-surface";
@@ -18,7 +16,9 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
   if (!signedIn) return null;
 
   const isFeed = pathname === "/";
+  const isSearch = pathname.startsWith("/search");
   const isProfile = pathname.startsWith("/profile");
+  const isSettings = pathname.startsWith("/settings");
 
   return (
     <>
@@ -38,6 +38,15 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
           <Home size={24} strokeWidth={1.75} />
         </a>
         <a
+          href="/search"
+          aria-label="Search"
+          aria-current={isSearch ? "page" : undefined}
+          title="Search"
+          className={railLinkClass(isSearch)}
+        >
+          <Search size={24} strokeWidth={1.75} />
+        </a>
+        <a
           href="/profile"
           aria-label="Profile"
           aria-current={isProfile ? "page" : undefined}
@@ -46,8 +55,15 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
         >
           <User size={24} strokeWidth={1.75} />
         </a>
-        <ThemeToggle className={railLinkClass(false)} />
-        <SignOutButton className={railLinkClass(false)} />
+        <a
+          href="/settings"
+          aria-label="Settings"
+          aria-current={isSettings ? "page" : undefined}
+          title="Settings"
+          className={railLinkClass(isSettings)}
+        >
+          <Settings size={24} strokeWidth={1.75} />
+        </a>
 
         <a
           href="/#compose"
@@ -70,12 +86,12 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
           <Home size={22} strokeWidth={1.75} />
         </a>
         <a
-          href="/profile"
-          aria-label="Profile"
-          aria-current={isProfile ? "page" : undefined}
-          className={railLinkClass(isProfile)}
+          href="/search"
+          aria-label="Search"
+          aria-current={isSearch ? "page" : undefined}
+          className={railLinkClass(isSearch)}
         >
-          <User size={22} strokeWidth={1.75} />
+          <Search size={22} strokeWidth={1.75} />
         </a>
         <a
           href="/#compose"
@@ -84,8 +100,22 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
         >
           <SquarePen size={18} strokeWidth={2} />
         </a>
-        <ThemeToggle className={railLinkClass(false)} />
-        <SignOutButton className={railLinkClass(false)} />
+        <a
+          href="/profile"
+          aria-label="Profile"
+          aria-current={isProfile ? "page" : undefined}
+          className={railLinkClass(isProfile)}
+        >
+          <User size={22} strokeWidth={1.75} />
+        </a>
+        <a
+          href="/settings"
+          aria-label="Settings"
+          aria-current={isSettings ? "page" : undefined}
+          className={railLinkClass(isSettings)}
+        >
+          <Settings size={22} strokeWidth={1.75} />
+        </a>
       </nav>
     </>
   );

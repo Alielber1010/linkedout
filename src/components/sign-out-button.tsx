@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export function SignOutButton({ className }: { className?: string }) {
+export function SignOutButton({
+  className,
+  children,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -26,7 +32,7 @@ export function SignOutButton({ className }: { className?: string }) {
       title="Sign out"
       className={className}
     >
-      <LogOut size={22} strokeWidth={1.75} />
+      {children ?? <LogOut size={22} strokeWidth={1.75} />}
     </button>
   );
 }

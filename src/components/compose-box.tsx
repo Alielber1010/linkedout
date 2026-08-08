@@ -4,11 +4,15 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createPost } from "@/app/actions";
 import { TAGS } from "@/lib/tags";
 
-export function ComposeBox() {
+export function ComposeBox({
+  defaultAnonymous = false,
+}: {
+  defaultAnonymous?: boolean;
+}) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [anonymous, setAnonymous] = useState(false);
+  const [anonymous, setAnonymous] = useState(defaultAnonymous);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -41,7 +45,7 @@ export function ComposeBox() {
       }
       setError(null);
       setSelectedTags([]);
-      setAnonymous(false);
+      setAnonymous(defaultAnonymous);
       formRef.current?.reset();
       setOpen(false);
     });

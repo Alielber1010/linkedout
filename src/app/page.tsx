@@ -24,6 +24,16 @@ export default async function Home({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let defaultAnonymous = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("default_anonymous")
+      .eq("id", user.id)
+      .single();
+    defaultAnonymous = profile?.default_anonymous ?? false;
+  }
+
   let query = supabase
     .from("posts")
     .select(
@@ -44,7 +54,7 @@ export default async function Home({
         <TagFilter />
       </div>
 
-      <ComposeBox />
+      <ComposeBox defaultAnonymous={defaultAnonymous} />
 
       <div className="space-y-4">
         {posts?.length ? (
