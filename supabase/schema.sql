@@ -7,6 +7,7 @@
 --   20260803082106  lock_down_trigger_function
 --   20260807155238  add_profile_identity_and_company_history
 --   20260808070447  add_default_anonymous_to_profiles
+--   20260815122649  lock_down_handle_new_user_rpc
 --
 -- To make future changes safely: use the Supabase MCP `execute_sql` (or `supabase db query`
 -- once the CLI is linked) to iterate, then commit a proper migration file under
@@ -106,6 +107,11 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- SECURITY DEFINER functions in `public` are callable by anon/authenticated
+-- via PostgREST RPC by default. This one only needs to run as the auth
+-- trigger, so lock direct RPC access down.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 -- ============================================================================
 -- Row Level Security
