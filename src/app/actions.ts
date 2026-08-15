@@ -81,6 +81,33 @@ export async function loadMorePosts(cursor: string, tag?: string) {
   };
 }
 
+// Polled from the client to power the "N new confessions" banner — deliberately
+// not pushed via revalidatePath, since other people's posts landing mid-scroll
+// should never silently reshuffle what's on screen.
+export async function loadNewerPosts(cursor: string, tag?: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let query = supabase
+    .from("posts")
+    .select(POSTS_SELECT)
+    .order("created_at", { ascending: false })
+    .gt("created_at", cursor)
+    .limit(PAGE_SIZE);
+
+  if (tag) query = query.contains("tags", [tag]);
+
+  const { data, error } = await query;
+  if (error) return { error: error.message, posts: [] };
+
+  return {
+    error: null,
+    posts: (data ?? []).map((post) => mapPost(post, user?.id ?? null)),
+  };
+}
+
 export async function react(postId: string, reactionType: ReactionType) {
   const supabase = await createClient();
   const {
@@ -96,20 +123,24 @@ export async function react(postId: string, reactionType: ReactionType) {
     .eq("profile_id", user.id)
     .maybeSingle();
 
+  // Reactions are optimistic on the client and don't need to force a refetch
+  // of the whole feed the way a new/deleted post does — that would reload and
+  // re-render every card on screen just to reflect a single toggle.
   if (existing?.reaction_type === reactionType) {
-    await supabase
+    const { error } = await supabase
       .from("reactions")
       .delete()
       .eq("post_id", postId)
       .eq("profile_id", user.id);
+    if (error) return { error: error.message };
   } else {
-    await supabase.from("reactions").upsert({
+    const { error } = await supabase.from("reactions").upsert({
       post_id: postId,
       profile_id: user.id,
       reaction_type: reactionType,
     });
+    if (error) return { error: error.message };
   }
 
-  revalidatePath("/");
   return { error: null };
 }

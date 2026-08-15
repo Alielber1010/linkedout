@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { ComposeBox } from "@/components/compose-box";
 import { TagFilter } from "@/components/tag-filter";
 import { Feed } from "@/components/feed";
 import { PAGE_SIZE, POSTS_SELECT, mapPost } from "@/lib/posts";
@@ -16,19 +15,25 @@ export default async function Home({
     data: { user },
   } = await supabase.auth.getUser();
 
-  let defaultAnonymous = false;
-  let avatarSeed = "guest";
-  let avatarInitial = "?";
+  let composer;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("default_anonymous, display_name, user_number")
+      .select("default_anonymous, display_name, headline, user_number")
       .eq("id", user.id)
       .single();
-    defaultAnonymous = profile?.default_anonymous ?? false;
-    avatarSeed = user.id;
+
     const name = profile?.display_name || `Anonymous #${profile?.user_number ?? 0}`;
-    avatarInitial = name.trim().charAt(0).toUpperCase() || "A";
+
+    composer = {
+      defaultAnonymous: profile?.default_anonymous ?? false,
+      avatarSeed: user.id,
+      avatarInitial: name.trim().charAt(0).toUpperCase() || "A",
+      profileId: user.id,
+      displayName: profile?.display_name ?? null,
+      headline: profile?.headline ?? null,
+      userNumber: profile?.user_number ?? 0,
+    };
   }
 
   let query = supabase
@@ -52,16 +57,11 @@ export default async function Home({
         <TagFilter />
       </div>
 
-      <ComposeBox
-        defaultAnonymous={defaultAnonymous}
-        avatarSeed={avatarSeed}
-        avatarInitial={avatarInitial}
-      />
-
       <Feed
         initialPosts={posts}
         tag={tag}
         hasMoreInitially={hasMore}
+        composer={composer}
         emptyMessage="No confessions yet. Be the first to break the NDA. (Kidding — please don't actually break your NDA.)"
       />
     </div>

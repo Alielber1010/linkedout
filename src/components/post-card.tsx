@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Trash2, Link2, Check } from "lucide-react";
 import { ReactionBar } from "@/components/reaction-bar";
 import { Avatar } from "@/components/avatar";
 import { deletePost } from "@/app/actions";
@@ -74,20 +74,40 @@ export function PostCard({
   const [pending, startTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [removed, setRemoved] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const identity =
     !isAnonymous && displayName ? displayName : `Anonymous #${userNumber}`;
+  const isOptimistic = id.startsWith("optimistic-");
+
+  function handleShare() {
+    const url = `${window.location.origin}/post/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
 
   function handleDelete() {
-    setDeleteError(null);
-    startTransition(async () => {
-      const result = await deletePost(id);
-      if (result?.error) {
-        setDeleteError(result.error);
-        return;
-      }
+    // Not persisted yet (still mid-flight optimistic insert) — nothing to
+    // delete server-side, just drop it locally.
+    if (id.startsWith("optimistic-")) {
       setRemoved(true);
       onDeleted?.(id);
+      return;
+    }
+    setDeleteError(null);
+    startTransition(async () => {
+      try {
+        const result = await deletePost(id);
+        if (result?.error) throw new Error(result.error);
+        setRemoved(true);
+        onDeleted?.(id);
+      } catch (err) {
+        setDeleteError(
+          err instanceof Error ? err.message : "Delete didn't go through — try again."
+        );
+      }
     });
   }
 
@@ -118,9 +138,29 @@ export function PostCard({
                 {company}
               </span>
             )}
-            <span className="text-secondary text-xs ml-auto">
-              {timeAgo(createdAt)}
-            </span>
+            {isOptimistic ? (
+              <span className="text-secondary text-xs ml-auto">
+                {timeAgo(createdAt)}
+              </span>
+            ) : (
+              <Link
+                href={`/post/${id}`}
+                className="text-secondary text-xs ml-auto hover:text-primary hover:underline"
+              >
+                {timeAgo(createdAt)}
+              </Link>
+            )}
+            {!isOptimistic && (
+              <button
+                type="button"
+                onClick={handleShare}
+                aria-label="Copy link to confession"
+                title="Copy link"
+                className="text-secondary hover:text-primary transition-colors"
+              >
+                {copied ? <Check size={14} /> : <Link2 size={14} />}
+              </button>
+            )}
             {isOwner && (
               <button
                 type="button"

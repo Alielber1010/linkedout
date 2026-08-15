@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { flushSync } from "react-dom";
 import { createPost } from "@/app/actions";
-import { TAGS } from "@/lib/tags";
+import { TAGS, extractTags } from "@/lib/tags";
+import { EMPTY_REACTION_COUNTS, type MappedPost } from "@/lib/posts";
 import { Avatar } from "@/components/avatar";
 
 const MAX_SUGGESTIONS = 6;
@@ -17,10 +19,22 @@ export function ComposeBox({
   defaultAnonymous = false,
   avatarSeed,
   avatarInitial,
+  profileId,
+  displayName,
+  headline,
+  userNumber,
+  onOptimisticPost,
+  onOptimisticPostFailed,
 }: {
   defaultAnonymous?: boolean;
   avatarSeed: string;
   avatarInitial: string;
+  profileId: string;
+  displayName: string | null;
+  headline: string | null;
+  userNumber: number;
+  onOptimisticPost?: (post: MappedPost) => void;
+  onOptimisticPostFailed?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,18 +109,53 @@ export function ComposeBox({
   }
 
   function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await createPost(formData);
-      if (result?.error) {
-        setError(result.error);
-        return;
-      }
+    const body = String(formData.get("body") ?? "").trim();
+    if (!body) return;
+
+    const role = String(formData.get("role") ?? "").trim();
+    const company = String(formData.get("company") ?? "").trim();
+    const isAnonymous = formData.get("anonymous") === "on";
+    const tempId = `optimistic-${crypto.randomUUID()}`;
+
+    // <form action={fn}> implicitly runs fn inside a transition (that's how
+    // useFormStatus's pending state works), which defers any state updates
+    // triggered here until the transition settles — including the *later*
+    // explicit startTransition below for the actual network call. flushSync
+    // forces this specific update out immediately so the post actually shows
+    // up the instant you hit submit instead of only after the round trip.
+    flushSync(() => {
+      onOptimisticPost?.({
+        id: tempId,
+        profileId,
+        body,
+        role: role || null,
+        company: company || null,
+        tags: extractTags(body),
+        createdAt: new Date().toISOString(),
+        userNumber,
+        displayName,
+        headline,
+        isAnonymous,
+        counts: { ...EMPTY_REACTION_COUNTS },
+        mine: null,
+        isOwner: true,
+      });
       setError(null);
       setAnonymous(defaultAnonymous);
       setBodyLength(0);
       setHashtagQuery(null);
-      formRef.current?.reset();
       setOpen(false);
+    });
+    formRef.current?.reset();
+
+    startTransition(async () => {
+      try {
+        const result = await createPost(formData);
+        if (result?.error) throw new Error(result.error);
+      } catch (err) {
+        onOptimisticPostFailed?.(tempId);
+        setError(err instanceof Error ? err.message : "Post didn't save — try again.");
+      }
     });
   }
 
@@ -134,6 +183,10 @@ export function ComposeBox({
               className="w-full resize-none bg-transparent text-[15px] outline-none placeholder:text-secondary"
               maxLength={2000}
             />
+
+            {!open && error && (
+              <p className="mt-1 text-sm text-primary">{error}</p>
+            )}
 
             {suggestions.length > 0 && (
               <div className="relative">
