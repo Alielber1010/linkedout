@@ -41,7 +41,7 @@ export function SearchBar() {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search workplaces, roles, rants..."
+        placeholder="Search the rants..."
         className="w-full rounded-full border border-border bg-surface pl-9 pr-3 py-2 text-sm outline-none focus:border-primary"
       />
     </div>

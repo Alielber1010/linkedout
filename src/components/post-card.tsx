@@ -43,8 +43,6 @@ export function PostCard({
   id,
   profileId,
   body,
-  role,
-  company,
   createdAt,
   userNumber,
   displayName,
@@ -58,8 +56,6 @@ export function PostCard({
   id: string;
   profileId: string;
   body: string;
-  role: string | null;
-  company: string | null;
   createdAt: string;
   userNumber: number;
   displayName: string | null;
@@ -127,16 +123,6 @@ export function PostCard({
             <span className="font-semibold">{identity}</span>
             {!isAnonymous && headline && (
               <span className="text-xs text-secondary">{headline}</span>
-            )}
-            {role && (
-              <span className="rounded-full border border-border px-2 py-0.5 text-xs text-secondary">
-                {role}
-              </span>
-            )}
-            {company && (
-              <span className="rounded-full border border-border px-2 py-0.5 text-xs text-secondary">
-                {company}
-              </span>
             )}
             {isOptimistic ? (
               <span className="text-secondary text-xs ml-auto">

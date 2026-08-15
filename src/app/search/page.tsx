@@ -31,9 +31,7 @@ export default async function SearchPage({
     const { data } = await supabase
       .from("posts")
       .select(POSTS_SELECT)
-      .or(
-        `body.ilike.${pattern},company.ilike.${pattern},role.ilike.${pattern}`
-      )
+      .ilike("body", pattern)
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE)
       .returns<PostRow[]>();
@@ -48,7 +46,7 @@ export default async function SearchPage({
 
       {!query && (
         <p className="text-center text-secondary py-12">
-          Search rants by role, company, or keyword.
+          Search rants by keyword.
         </p>
       )}
 

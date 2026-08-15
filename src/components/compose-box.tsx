@@ -112,8 +112,6 @@ export function ComposeBox({
     const body = String(formData.get("body") ?? "").trim();
     if (!body) return;
 
-    const role = String(formData.get("role") ?? "").trim();
-    const company = String(formData.get("company") ?? "").trim();
     const isAnonymous = formData.get("anonymous") === "on";
     const tempId = `optimistic-${crypto.randomUUID()}`;
 
@@ -128,8 +126,6 @@ export function ComposeBox({
         id: tempId,
         profileId,
         body,
-        role: role || null,
-        company: company || null,
         tags: extractTags(body),
         createdAt: new Date().toISOString(),
         userNumber,
@@ -212,19 +208,6 @@ export function ComposeBox({
 
             {open && (
               <div className="mt-3 space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    name="role"
-                    placeholder="Role (optional, e.g. AI Engineer)"
-                    className="flex-1 min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    name="company"
-                    placeholder="Company (optional)"
-                    className="flex-1 min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary"
-                  />
-                </div>
-
                 <p className="text-xs text-secondary">
                   Type <span className="text-primary">#</span> to tag it —
                   #Layoffs, #ToxicBoss, you know the drill.

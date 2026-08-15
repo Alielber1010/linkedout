@@ -7,8 +7,6 @@ import { PAGE_SIZE, POSTS_SELECT, mapPost } from "@/lib/posts";
 
 export async function createPost(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
-  const role = String(formData.get("role") ?? "").trim();
-  const company = String(formData.get("company") ?? "").trim();
   const tags = extractTags(body);
   const isAnonymous = formData.get("anonymous") === "on";
 
@@ -24,8 +22,6 @@ export async function createPost(formData: FormData) {
   const { error } = await supabase.from("posts").insert({
     profile_id: user.id,
     body,
-    role: role || null,
-    company: company || null,
     tags,
     is_anonymous: isAnonymous,
   });

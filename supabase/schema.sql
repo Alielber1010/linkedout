@@ -8,6 +8,7 @@
 --   20260807155238  add_profile_identity_and_company_history
 --   20260808070447  add_default_anonymous_to_profiles
 --   20260815122649  lock_down_handle_new_user_rpc
+--   20260815180126  drop_posts_role_and_company
 --
 -- To make future changes safely: use the Supabase MCP `execute_sql` (or `supabase db query`
 -- once the CLI is linked) to iterate, then commit a proper migration file under
@@ -48,8 +49,6 @@ create table public.posts (
   id            uuid primary key default gen_random_uuid(),
   profile_id    uuid not null references public.profiles (id) on delete cascade,
   body          text not null,
-  role          text,
-  company       text,
   tags          text[] not null default '{}',
   created_at    timestamptz not null default now(),
   is_anonymous  boolean not null default false,
