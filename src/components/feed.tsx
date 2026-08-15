@@ -51,8 +51,19 @@ export function Feed({
     setPrevInitialPosts(initialPosts);
     const cutoff = initialPosts[initialPosts.length - 1]?.createdAt;
     const initialIds = new Set(initialPosts.map((p) => p.id));
+    // Optimistic placeholders are stamped client-side, slightly *before* the
+    // server timestamps the real row, so an optimistic post's createdAt is
+    // reliably older than the confirmed row's — which would otherwise make
+    // it look like genuine older "extra" content and survive the merge
+    // alongside the now-confirmed real post. Any revalidation means our own
+    // action already resolved, so it's always safe to drop these here.
     const extra = cutoff
-      ? posts.filter((p) => p.createdAt < cutoff && !initialIds.has(p.id))
+      ? posts.filter(
+          (p) =>
+            p.createdAt < cutoff &&
+            !initialIds.has(p.id) &&
+            !p.id.startsWith("optimistic-")
+        )
       : [];
     setPosts([...initialPosts, ...extra]);
     setHasMore(hasMoreInitially);

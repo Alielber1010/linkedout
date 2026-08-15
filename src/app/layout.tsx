@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeScript } from "@/components/theme-script";
 import { WelcomeToast } from "@/components/welcome-toast";
 import { SideNav } from "@/components/side-nav";
+import { TrendingPanel } from "@/components/trending-panel";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -37,6 +38,19 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
   const signedIn = Boolean(user);
 
+  const content = (
+    <>
+      <main className="flex-1 w-full px-4 py-6">{children}</main>
+      <footer className="border-t border-border py-4">
+        <div className="px-4 text-center text-xs text-secondary">
+          <Link href="/privacy" className="hover:text-primary hover:underline">
+            Privacy &amp; Terms
+          </Link>
+        </div>
+      </footer>
+    </>
+  );
+
   return (
     <html
       lang="en"
@@ -46,27 +60,24 @@ export default async function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <SideNav signedIn={signedIn} />
-        <div
-          className={`flex-1 flex flex-col ${
-            signedIn ? "sm:pl-16 lg:pl-20 pb-14 sm:pb-0" : ""
-          }`}
-        >
-          <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-6">
-            {children}
-          </main>
-          <footer className="border-t border-border py-4">
-            <div className="mx-auto max-w-2xl px-4 text-center text-xs text-secondary">
-              <Link
-                href="/privacy"
-                className="hover:text-primary hover:underline"
-              >
-                Privacy &amp; Terms
-              </Link>
+      <body className="min-h-full bg-background text-foreground">
+        {signedIn ? (
+          <div className="mx-auto flex w-full max-w-[1280px] pb-14 sm:pb-0">
+            <SideNav signedIn={signedIn} />
+            <div className="flex min-w-0 flex-1 flex-col border-x border-border">
+              <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+                {content}
+              </div>
             </div>
-          </footer>
-        </div>
+            <aside className="hidden lg:block w-[320px] shrink-0 px-4 py-6">
+              <div className="sticky top-6">
+                <TrendingPanel />
+              </div>
+            </aside>
+          </div>
+        ) : (
+          <div className="mx-auto flex w-full max-w-2xl flex-col">{content}</div>
+        )}
         <WelcomeToast />
       </body>
     </html>
