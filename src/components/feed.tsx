@@ -15,6 +15,7 @@ type ComposerConfig = {
   profileId: string;
   displayName: string | null;
   headline: string | null;
+  username: string | null;
   userNumber: number;
 };
 
@@ -126,6 +127,7 @@ export function Feed({
           profileId={composer.profileId}
           displayName={composer.displayName}
           headline={composer.headline}
+          username={composer.username}
           userNumber={composer.userNumber}
           onOptimisticPost={handleOptimisticPost}
           onOptimisticPostFailed={handleOptimisticPostFailed}

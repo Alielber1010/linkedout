@@ -9,6 +9,7 @@
 --   20260808070447  add_default_anonymous_to_profiles
 --   20260815122649  lock_down_handle_new_user_rpc
 --   20260815180126  drop_posts_role_and_company
+--   20260815180426  add_profile_usernames
 --
 -- To make future changes safely: use the Supabase MCP `execute_sql` (or `supabase db query`
 -- once the CLI is linked) to iterate, then commit a proper migration file under
@@ -31,9 +32,12 @@ create table public.profiles (
   created_at         timestamptz not null default now(),
   display_name       text,
   headline           text,
+  username           text not null,
   default_anonymous  boolean not null default false,
   constraint display_name_length check (display_name is null or (char_length(display_name) between 1 and 60)),
-  constraint headline_length check (headline is null or (char_length(headline) between 1 and 120))
+  constraint headline_length check (headline is null or (char_length(headline) between 1 and 120)),
+  constraint profiles_username_key unique (username),
+  constraint username_format check (username ~ '^[a-z0-9_]{3,20}$')
 );
 
 create sequence public.profiles_user_number_seq
@@ -89,15 +93,22 @@ create index profile_companies_profile_id_idx on public.profile_companies using 
 -- Functions & triggers
 -- ============================================================================
 
--- Auto-create a profile row whenever a new auth user signs up.
+-- Auto-create a profile row whenever a new auth user signs up, with a
+-- default unique username derived from the user_number sequence (grabbed
+-- once so both columns stay in sync — using each column's own default
+-- would call nextval() twice and desync them).
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = 'public'
 as $$
+declare
+  next_number integer;
 begin
-  insert into public.profiles (id) values (new.id)
+  next_number := nextval('public.profiles_user_number_seq');
+  insert into public.profiles (id, user_number, username)
+  values (new.id, next_number, 'user' || next_number)
   on conflict (id) do nothing;
   return new;
 end;

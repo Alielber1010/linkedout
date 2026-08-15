@@ -11,16 +11,19 @@ export function ProfileHeader({
   createdAt,
   initialDisplayName,
   initialHeadline,
+  initialUsername,
 }: {
   initial: string;
   userNumber?: number;
   createdAt: string | null;
   initialDisplayName: string;
   initialHeadline: string;
+  initialUsername: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [headline, setHeadline] = useState(initialHeadline);
+  const [username, setUsername] = useState(initialUsername);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -36,6 +39,7 @@ export function ProfileHeader({
       }
       setDisplayName(String(formData.get("display_name") ?? "").trim());
       setHeadline(String(formData.get("headline") ?? "").trim());
+      setUsername(String(formData.get("username") ?? "").trim().toLowerCase());
       setEditing(false);
     });
   }
@@ -56,7 +60,10 @@ export function ProfileHeader({
         {initial}
       </div>
 
-      <h1 className="mt-3 text-xl font-bold">{shownName}</h1>
+      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+        <h1 className="text-xl font-bold">{shownName}</h1>
+        {username && <span className="text-secondary text-sm">@{username}</span>}
+      </div>
       <p className="text-secondary text-sm">
         {headline || "No headline. No ambition either."}
       </p>
@@ -85,6 +92,28 @@ export function ProfileHeader({
             action={handleSubmit}
             className="space-y-4"
           >
+            <div>
+              <label className="block text-xs font-medium text-secondary mb-1">
+                Username
+              </label>
+              <div className="flex items-center rounded-md border border-border bg-background focus-within:border-primary">
+                <span className="pl-3 text-sm text-secondary">@</span>
+                <input
+                  name="username"
+                  defaultValue={username}
+                  placeholder="user1234"
+                  pattern="[a-z0-9_]{3,20}"
+                  title="Lowercase letters, numbers, and underscores only — 3 to 20 characters"
+                  maxLength={20}
+                  required
+                  className="w-full bg-transparent px-1.5 py-2 text-sm outline-none"
+                />
+              </div>
+              <p className="mt-1 text-xs text-secondary">
+                Lowercase letters, numbers, underscores. 3–20 characters. Has
+                to be unique — no two ghosts can share a name.
+              </p>
+            </div>
             <div>
               <label className="block text-xs font-medium text-secondary mb-1">
                 Display name

@@ -19,7 +19,7 @@ export default async function Home({
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("default_anonymous, display_name, headline, user_number")
+      .select("default_anonymous, display_name, headline, username, user_number")
       .eq("id", user.id)
       .single();
 
@@ -32,6 +32,7 @@ export default async function Home({
       profileId: user.id,
       displayName: profile?.display_name ?? null,
       headline: profile?.headline ?? null,
+      username: profile?.username ?? null,
       userNumber: profile?.user_number ?? 0,
     };
   }

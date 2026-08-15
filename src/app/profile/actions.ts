@@ -6,9 +6,18 @@ import { createClient } from "@/lib/supabase/server";
 const STATUSES = ["left", "fired", "laid_off", "escaped", "ghosted"] as const;
 export type CompanyStatus = (typeof STATUSES)[number];
 
+const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
+
 export async function updateProfile(formData: FormData) {
   const displayName = String(formData.get("display_name") ?? "").trim();
   const headline = String(formData.get("headline") ?? "").trim();
+  const username = String(formData.get("username") ?? "").trim().toLowerCase();
+
+  if (!USERNAME_PATTERN.test(username)) {
+    return {
+      error: "Username needs to be 3-20 characters: lowercase letters, numbers, underscores only.",
+    };
+  }
 
   const supabase = await createClient();
   const {
@@ -21,10 +30,16 @@ export async function updateProfile(formData: FormData) {
     .update({
       display_name: displayName || null,
       headline: headline || null,
+      username,
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "That username's taken — someone else already claimed it." };
+    }
+    return { error: error.message };
+  }
 
   revalidatePath("/profile");
   revalidatePath("/");

@@ -22,6 +22,7 @@ export function ComposeBox({
   profileId,
   displayName,
   headline,
+  username,
   userNumber,
   onOptimisticPost,
   onOptimisticPostFailed,
@@ -32,6 +33,7 @@ export function ComposeBox({
   profileId: string;
   displayName: string | null;
   headline: string | null;
+  username: string | null;
   userNumber: number;
   onOptimisticPost?: (post: MappedPost) => void;
   onOptimisticPostFailed?: (id: string) => void;
@@ -131,6 +133,7 @@ export function ComposeBox({
         userNumber,
         displayName,
         headline,
+        username,
         isAnonymous,
         counts: { ...EMPTY_REACTION_COUNTS },
         mine: null,

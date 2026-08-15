@@ -15,7 +15,7 @@ export default async function ProfilePage() {
   const [{ data: profile }, { data: companies }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("user_number, display_name, headline, created_at")
+      .select("user_number, display_name, headline, username, created_at")
       .eq("id", user.id)
       .single(),
     supabase
@@ -38,6 +38,7 @@ export default async function ProfilePage() {
           createdAt={profile?.created_at ?? null}
           initialDisplayName={profile?.display_name ?? ""}
           initialHeadline={profile?.headline ?? ""}
+          initialUsername={profile?.username ?? ""}
         />
       </div>
 

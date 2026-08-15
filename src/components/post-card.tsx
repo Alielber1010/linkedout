@@ -47,6 +47,7 @@ export function PostCard({
   userNumber,
   displayName,
   headline,
+  username,
   isAnonymous,
   counts,
   mine,
@@ -60,6 +61,7 @@ export function PostCard({
   userNumber: number;
   displayName: string | null;
   headline: string | null;
+  username: string | null;
   isAnonymous: boolean;
   counts: Record<ReactionType, number>;
   mine: ReactionType | null;
@@ -121,6 +123,9 @@ export function PostCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap text-sm">
             <span className="font-semibold">{identity}</span>
+            {!isAnonymous && username && (
+              <span className="text-xs text-secondary">@{username}</span>
+            )}
             {!isAnonymous && headline && (
               <span className="text-xs text-secondary">{headline}</span>
             )}
