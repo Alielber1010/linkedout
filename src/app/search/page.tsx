@@ -1,15 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { SearchBar } from "@/components/search-bar";
-import { PostCard } from "@/components/post-card";
-import type { ReactionType } from "@/lib/tags";
-
-const EMPTY_COUNTS: Record<ReactionType, number> = {
-  been_there: 0,
-  same: 0,
-  red_flag: 0,
-  escaped: 0,
-  corporate: 0,
-};
+import { Feed } from "@/components/feed";
+import { PAGE_SIZE, POSTS_SELECT, mapPost, type MappedPost, type PostRow } from "@/lib/posts";
 
 // PostgREST treats a double-quoted filter value as one literal token, so
 // wrapping the term neutralizes the comma/paren syntax `.or()` otherwise
@@ -32,25 +24,20 @@ export default async function SearchPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  let posts: Awaited<ReturnType<typeof runSearch>> = [];
+  let posts: MappedPost[] = [];
 
-  async function runSearch() {
+  if (query) {
     const pattern = toIlikePattern(query);
     const { data } = await supabase
       .from("posts")
-      .select(
-        "id, body, role, company, tags, created_at, is_anonymous, profiles!posts_profile_id_fkey(user_number, display_name, headline), reactions(profile_id, reaction_type)"
-      )
+      .select(POSTS_SELECT)
       .or(
         `body.ilike.${pattern},company.ilike.${pattern},role.ilike.${pattern}`
       )
       .order("created_at", { ascending: false })
-      .limit(50);
-    return data ?? [];
-  }
-
-  if (query) {
-    posts = await runSearch();
+      .limit(PAGE_SIZE)
+      .returns<PostRow[]>();
+    posts = (data ?? []).map((row) => mapPost(row, user?.id ?? null));
   }
 
   return (
@@ -65,47 +52,12 @@ export default async function SearchPage({
         </p>
       )}
 
-      {query && posts.length === 0 && (
-        <p className="text-center text-secondary py-12">
-          Nothing matches &quot;{query}&quot;. Maybe your workplace is the
-          only one that bad.
-        </p>
-      )}
-
-      {posts.length > 0 && (
-        <div className="space-y-4">
-          {posts.map((post) => {
-            const profile = Array.isArray(post.profiles)
-              ? post.profiles[0]
-              : post.profiles;
-            const counts = { ...EMPTY_COUNTS };
-            let mine: ReactionType | null = null;
-
-            for (const r of post.reactions ?? []) {
-              const type = r.reaction_type as ReactionType;
-              counts[type] = (counts[type] ?? 0) + 1;
-              if (user && r.profile_id === user.id) mine = type;
-            }
-
-            return (
-              <PostCard
-                key={post.id}
-                id={post.id}
-                body={post.body}
-                role={post.role}
-                company={post.company}
-                tags={post.tags ?? []}
-                createdAt={post.created_at}
-                userNumber={profile?.user_number ?? 0}
-                displayName={profile?.display_name ?? null}
-                headline={profile?.headline ?? null}
-                isAnonymous={post.is_anonymous}
-                counts={counts}
-                mine={mine}
-              />
-            );
-          })}
-        </div>
+      {query && (
+        <Feed
+          initialPosts={posts}
+          hasMoreInitially={false}
+          emptyMessage={`Nothing matches "${query}". Maybe your workplace is the only one that bad.`}
+        />
       )}
     </div>
   );

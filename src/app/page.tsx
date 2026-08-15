@@ -1,16 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { ComposeBox } from "@/components/compose-box";
 import { TagFilter } from "@/components/tag-filter";
-import { PostCard } from "@/components/post-card";
-import type { ReactionType } from "@/lib/tags";
-
-const EMPTY_COUNTS: Record<ReactionType, number> = {
-  been_there: 0,
-  same: 0,
-  red_flag: 0,
-  escaped: 0,
-  corporate: 0,
-};
+import { Feed } from "@/components/feed";
+import { PAGE_SIZE, POSTS_SELECT, mapPost } from "@/lib/posts";
 
 export default async function Home({
   searchParams,
@@ -25,26 +17,32 @@ export default async function Home({
   } = await supabase.auth.getUser();
 
   let defaultAnonymous = false;
+  let avatarSeed = "guest";
+  let avatarInitial = "?";
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("default_anonymous")
+      .select("default_anonymous, display_name, user_number")
       .eq("id", user.id)
       .single();
     defaultAnonymous = profile?.default_anonymous ?? false;
+    avatarSeed = user.id;
+    const name = profile?.display_name || `Anonymous #${profile?.user_number ?? 0}`;
+    avatarInitial = name.trim().charAt(0).toUpperCase() || "A";
   }
 
   let query = supabase
     .from("posts")
-    .select(
-      "id, body, role, company, tags, created_at, is_anonymous, profiles!posts_profile_id_fkey(user_number, display_name, headline), reactions(profile_id, reaction_type)"
-    )
+    .select(POSTS_SELECT)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(PAGE_SIZE + 1);
 
   if (tag) query = query.contains("tags", [tag]);
 
-  const { data: posts } = await query;
+  const { data } = await query;
+  const rows = data ?? [];
+  const hasMore = rows.length > PAGE_SIZE;
+  const posts = rows.slice(0, PAGE_SIZE).map((row) => mapPost(row, user?.id ?? null));
 
   return (
     <div>
@@ -54,48 +52,18 @@ export default async function Home({
         <TagFilter />
       </div>
 
-      <ComposeBox defaultAnonymous={defaultAnonymous} />
+      <ComposeBox
+        defaultAnonymous={defaultAnonymous}
+        avatarSeed={avatarSeed}
+        avatarInitial={avatarInitial}
+      />
 
-      <div className="space-y-4">
-        {posts?.length ? (
-          posts.map((post) => {
-            const profile = Array.isArray(post.profiles)
-              ? post.profiles[0]
-              : post.profiles;
-            const counts = { ...EMPTY_COUNTS };
-            let mine: ReactionType | null = null;
-
-            for (const r of post.reactions ?? []) {
-              const type = r.reaction_type as ReactionType;
-              counts[type] = (counts[type] ?? 0) + 1;
-              if (user && r.profile_id === user.id) mine = type;
-            }
-
-            return (
-              <PostCard
-                key={post.id}
-                id={post.id}
-                body={post.body}
-                role={post.role}
-                company={post.company}
-                tags={post.tags ?? []}
-                createdAt={post.created_at}
-                userNumber={profile?.user_number ?? 0}
-                displayName={profile?.display_name ?? null}
-                headline={profile?.headline ?? null}
-                isAnonymous={post.is_anonymous}
-                counts={counts}
-                mine={mine}
-              />
-            );
-          })
-        ) : (
-          <p className="text-center text-secondary py-12">
-            No confessions yet. Be the first to break the NDA. (Kidding —
-            please don&apos;t actually break your NDA.)
-          </p>
-        )}
-      </div>
+      <Feed
+        initialPosts={posts}
+        tag={tag}
+        hasMoreInitially={hasMore}
+        emptyMessage="No confessions yet. Be the first to break the NDA. (Kidding — please don't actually break your NDA.)"
+      />
     </div>
   );
 }

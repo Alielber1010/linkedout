@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 export function Modal({
@@ -14,6 +14,9 @@ export function Modal({
   children: React.ReactNode;
   headerAction?: React.ReactNode;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -22,12 +25,28 @@ export function Modal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
+  useEffect(() => {
+    const target = contentRef.current?.querySelector<HTMLElement>(
+      "input, textarea, select, button"
+    );
+    target?.focus();
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-8 sm:items-center"
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
@@ -50,7 +69,9 @@ export function Modal({
           </div>
           {headerAction}
         </div>
-        <div className="max-h-[75vh] overflow-y-auto p-4">{children}</div>
+        <div ref={contentRef} className="max-h-[75vh] overflow-y-auto p-4">
+          {children}
+        </div>
       </div>
     </div>
   );

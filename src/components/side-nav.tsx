@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Home, Search, User, Settings, SquarePen } from "lucide-react";
 
@@ -24,11 +26,11 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
     <>
       {/* Desktop / tablet rail */}
       <aside className="hidden sm:flex flex-col items-center gap-1 fixed left-0 top-0 h-full w-16 lg:w-20 py-3 border-r border-border bg-background z-40">
-        <a href="/" aria-label="LinkedOut home" className="mb-4">
-          <img src="/icon.png" alt="" className="h-8 w-8" />
-        </a>
+        <Link href="/" aria-label="LinkedOut home" className="mb-4">
+          <Image src="/icon.png" alt="" width={32} height={32} className="h-8 w-8" />
+        </Link>
 
-        <a
+        <Link
           href="/"
           aria-label="Feed"
           aria-current={isFeed ? "page" : undefined}
@@ -36,8 +38,8 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
           className={railLinkClass(isFeed)}
         >
           <Home size={24} strokeWidth={1.75} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/search"
           aria-label="Search"
           aria-current={isSearch ? "page" : undefined}
@@ -45,8 +47,8 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
           className={railLinkClass(isSearch)}
         >
           <Search size={24} strokeWidth={1.75} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/profile"
           aria-label="Profile"
           aria-current={isProfile ? "page" : undefined}
@@ -54,8 +56,8 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
           className={railLinkClass(isProfile)}
         >
           <User size={24} strokeWidth={1.75} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/settings"
           aria-label="Settings"
           aria-current={isSettings ? "page" : undefined}
@@ -63,59 +65,59 @@ export function SideNav({ signedIn }: { signedIn: boolean }) {
           className={railLinkClass(isSettings)}
         >
           <Settings size={24} strokeWidth={1.75} />
-        </a>
+        </Link>
 
-        <a
+        <Link
           href="/#compose"
           aria-label="New confession"
           title="New confession"
           className="mt-auto mb-2 h-12 w-12 rounded-full bg-primary hover:bg-primary-hover text-white flex items-center justify-center transition-colors"
         >
           <SquarePen size={20} strokeWidth={2} />
-        </a>
+        </Link>
       </aside>
 
       {/* Mobile bottom bar */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 h-14 border-t border-border bg-background/95 backdrop-blur flex items-center justify-around z-40">
-        <a
+        <Link
           href="/"
           aria-label="Feed"
           aria-current={isFeed ? "page" : undefined}
           className={railLinkClass(isFeed)}
         >
           <Home size={22} strokeWidth={1.75} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/search"
           aria-label="Search"
           aria-current={isSearch ? "page" : undefined}
           className={railLinkClass(isSearch)}
         >
           <Search size={22} strokeWidth={1.75} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/#compose"
           aria-label="New confession"
           className="h-11 w-11 rounded-full bg-primary text-white flex items-center justify-center"
         >
           <SquarePen size={18} strokeWidth={2} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/profile"
           aria-label="Profile"
           aria-current={isProfile ? "page" : undefined}
           className={railLinkClass(isProfile)}
         >
           <User size={22} strokeWidth={1.75} />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/settings"
           aria-label="Settings"
           aria-current={isSettings ? "page" : undefined}
           className={railLinkClass(isSettings)}
         >
           <Settings size={22} strokeWidth={1.75} />
-        </a>
+        </Link>
       </nav>
     </>
   );

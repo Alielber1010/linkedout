@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeScript } from "@/components/theme-script";
 import { WelcomeToast } from "@/components/welcome-toast";
@@ -57,12 +58,12 @@ export default async function RootLayout({
           </main>
           <footer className="border-t border-border py-4">
             <div className="mx-auto max-w-2xl px-4 text-center text-xs text-secondary">
-              <a
+              <Link
                 href="/privacy"
                 className="hover:text-primary hover:underline"
               >
                 Privacy &amp; Terms
-              </a>
+              </Link>
             </div>
           </footer>
         </div>

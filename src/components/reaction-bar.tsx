@@ -52,6 +52,8 @@ export function ReactionBar({
             key={type}
             onClick={() => handleClick(type)}
             title={label}
+            aria-label={`${label}${count > 0 ? ` (${count})` : ""}`}
+            aria-pressed={active}
             style={
               active
                 ? {

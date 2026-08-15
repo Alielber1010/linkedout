@@ -6,6 +6,5 @@ export function ThemeScript() {
       document.documentElement.setAttribute('data-theme', theme);
     } catch (e) {}
   `;
-  // eslint-disable-next-line react/no-danger
   return <script dangerouslySetInnerHTML={{ __html: code }} />;
 }
