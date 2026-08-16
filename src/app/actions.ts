@@ -163,8 +163,6 @@ export async function loadNewerPosts(cursor: string, tag?: string) {
 }
 
 export async function react(postId: string, reactionType: ReactionType) {
-  if (await isLikelyBot()) return { error: "Automated request blocked." };
-
   const supabase = await createClient();
   const {
     data: { user },

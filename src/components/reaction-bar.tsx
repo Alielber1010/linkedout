@@ -58,6 +58,7 @@ export function ReactionBar({
         setOptimisticCounts(wasCounts);
         setOptimisticMine(wasMine);
         setError("Reaction didn't save — try again.");
+        setTimeout(() => setError(null), 4000);
       }
     });
   }
