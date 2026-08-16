@@ -38,6 +38,21 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
   const signedIn = Boolean(user);
 
+  let navProfile = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, username, user_number")
+      .eq("id", user.id)
+      .single();
+
+    navProfile = {
+      displayName: profile?.display_name ?? null,
+      username: profile?.username ?? null,
+      userNumber: profile?.user_number ?? 0,
+    };
+  }
+
   const content = (
     <>
       <main className="flex-1 w-full px-4 py-6">{children}</main>
@@ -63,7 +78,7 @@ export default async function RootLayout({
       <body className="min-h-full bg-background text-foreground">
         {signedIn ? (
           <div className="mx-auto flex w-full max-w-[1280px] pb-14 sm:pb-0">
-            <SideNav signedIn={signedIn} />
+            <SideNav signedIn={signedIn} profile={navProfile} />
             <div className="flex min-w-0 flex-1 flex-col border-x border-border">
               <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
                 {content}
