@@ -84,11 +84,11 @@ export function ReactionBar({
                     }
                   : undefined
               }
-              className={`flex items-center gap-1 rounded-full border transition-colors ${
-                isPrimary ? "px-2.5 py-1.5 text-sm font-medium" : "px-2 py-1 text-xs"
+              className={`flex items-center gap-1 rounded-full border whitespace-nowrap transition-colors ${
+                isPrimary ? "px-2.5 py-1.5 text-sm font-medium" : "px-2.5 py-1 text-xs font-medium"
               } ${active ? "" : "border-border text-secondary hover:border-primary"}`}
             >
-              <span className={isPrimary ? "text-base" : undefined}>{emoji}</span>
+              {isPrimary ? <span className="text-base">{emoji}</span> : <span>{label}</span>}
               <span>{count > 0 ? count : ""}</span>
             </button>
           );

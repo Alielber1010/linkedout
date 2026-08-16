@@ -198,6 +198,41 @@ export async function react(postId: string, reactionType: ReactionType) {
   return { error: null };
 }
 
+export async function toggleRepost(postId: string) {
+  if (await isLikelyBot()) return { error: "Automated request blocked." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Not signed in yet, refresh and try again." };
+
+  const { data: existing } = await supabase
+    .from("reposts")
+    .select("post_id")
+    .eq("post_id", postId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("reposts")
+      .delete()
+      .eq("post_id", postId)
+      .eq("profile_id", user.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("reposts").insert({
+      post_id: postId,
+      profile_id: user.id,
+    });
+    if (error) return { error: error.message };
+  }
+
+  return { error: null };
+}
+
 export async function createComment(postId: string, formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   if (!body) return { error: "Say something first." };

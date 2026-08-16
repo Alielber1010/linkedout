@@ -12,6 +12,7 @@
 --   20260815180426  add_profile_usernames
 --   20260816082751  add_comments_and_post_views
 --   20260816082814  optimize_comments_rls_initplan
+--   20260816093129  add_reposts
 --
 -- To make future changes safely: use the Supabase MCP `apply_migration` (or `supabase db query`
 -- once the CLI is linked), which writes a matching file under supabase/migrations/ — keep this
@@ -76,6 +77,16 @@ create table public.reactions (
     reaction_type = any (array['been_there', 'same', 'red_flag', 'escaped', 'corporate'])
   )
 );
+
+-- reposts: one repost per (post, profile)
+create table public.reposts (
+  post_id     uuid not null references public.posts (id) on delete cascade,
+  profile_id  uuid not null references public.profiles (id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  primary key (post_id, profile_id)
+);
+
+create index reposts_profile_id_idx on public.reposts using btree (profile_id);
 
 -- profile_companies: a user's work history ("company status" tags shown on profile)
 create table public.profile_companies (
@@ -161,6 +172,7 @@ alter table public.posts enable row level security;
 alter table public.reactions enable row level security;
 alter table public.profile_companies enable row level security;
 alter table public.comments enable row level security;
+alter table public.reposts enable row level security;
 
 -- profiles
 create policy "profiles are publicly readable"
@@ -230,4 +242,17 @@ create policy "users can insert their own comments"
 
 create policy "users can delete their own comments"
   on public.comments for delete
+  using ((select auth.uid()) = profile_id);
+
+-- reposts
+create policy "reposts are publicly readable"
+  on public.reposts for select
+  using (true);
+
+create policy "users can insert their own reposts"
+  on public.reposts for insert
+  with check ((select auth.uid()) = profile_id);
+
+create policy "users can delete their own reposts"
+  on public.reposts for delete
   using ((select auth.uid()) = profile_id);

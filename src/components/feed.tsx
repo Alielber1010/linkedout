@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { ArrowUp } from "lucide-react";
 import { PostCard } from "@/components/post-card";
 import { ComposeBox } from "@/components/compose-box";
+import { Avatar } from "@/components/avatar";
 import { loadMorePosts, loadNewerPosts } from "@/app/actions";
 import { PAGE_SIZE, type MappedPost } from "@/lib/posts";
 
@@ -151,12 +152,17 @@ export function Feed({
           <button
             type="button"
             onClick={showNewPosts}
-            className="animate-drop-in flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-colors hover:bg-primary-hover"
+            className="animate-drop-in flex items-center gap-2 rounded-full bg-primary pl-2 pr-4 py-1.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-colors hover:bg-primary-hover"
           >
             <ArrowUp size={15} strokeWidth={2.5} />
-            {pendingNewPosts.length === 1
-              ? "1 new confession"
-              : `${pendingNewPosts.length} new confessions`}
+            <span className="flex -space-x-2">
+              {pendingNewPosts.slice(0, 3).map((post) => (
+                <span key={post.id} className="rounded-full ring-2 ring-primary">
+                  <Avatar content="" size={22} />
+                </span>
+              ))}
+            </span>
+            posted
           </button>
         </div>
       )}

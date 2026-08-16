@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Trash2, Link2, Check, MessageCircle, Eye } from "lucide-react";
+import { Trash2, Link2, Check, MessageCircle, Eye, Repeat2 } from "lucide-react";
 import { ReactionBar } from "@/components/reaction-bar";
+import { RepostButton } from "@/components/repost-button";
 import { Avatar } from "@/components/avatar";
 import { deletePost } from "@/app/actions";
 import { canonicalTag, type ReactionType } from "@/lib/tags";
@@ -44,6 +45,8 @@ export function PostCard({
   isOwner,
   views,
   commentCount,
+  repostCount,
+  repostedByMe,
   onDeleted,
 }: {
   id: string;
@@ -60,6 +63,8 @@ export function PostCard({
   isOwner: boolean;
   views: number;
   commentCount: number;
+  repostCount: number;
+  repostedByMe: boolean;
   onDeleted?: (id: string) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -179,6 +184,15 @@ export function PostCard({
                 <MessageCircle size={16} />
                 {commentCount > 0 ? commentCount : ""}
               </Link>
+            )}
+
+            {isOptimistic ? (
+              <span className="flex shrink-0 items-center gap-1.5 text-sm text-secondary">
+                <Repeat2 size={18} />
+                {repostCount > 0 ? repostCount : ""}
+              </span>
+            ) : (
+              <RepostButton postId={id} count={repostCount} mine={repostedByMe} />
             )}
 
             <div className="min-w-0 overflow-x-auto">

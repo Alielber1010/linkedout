@@ -141,6 +141,8 @@ export function ComposeBox({
         isOwner: true,
         views: 0,
         commentCount: 0,
+        repostCount: 0,
+        repostedByMe: false,
       });
       setError(null);
       setAnonymous(defaultAnonymous);
