@@ -59,6 +59,7 @@ export async function createPost(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   const tags = extractTags(body);
   const isAnonymous = formData.get("anonymous") === "on";
+  const quotedPostId = formData.get("quoted_post_id");
 
   if (!body) return { error: "Say something first." };
 
@@ -79,11 +80,13 @@ export async function createPost(formData: FormData) {
     body,
     tags,
     is_anonymous: isAnonymous,
+    quoted_post_id: quotedPostId ? String(quotedPostId) : null,
   });
 
   if (error) return { error: error.message };
 
   revalidatePath("/");
+  revalidatePath("/search");
   return { error: null };
 }
 

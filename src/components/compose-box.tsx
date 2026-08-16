@@ -143,6 +143,7 @@ export function ComposeBox({
         commentCount: 0,
         repostCount: 0,
         repostedByMe: false,
+        quotedPost: null,
       });
       setError(null);
       setAnonymous(defaultAnonymous);

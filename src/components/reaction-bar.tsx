@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Flag } from "lucide-react";
 import { react } from "@/app/actions";
 import { REACTIONS, type ReactionType } from "@/lib/tags";
 
@@ -63,8 +64,8 @@ export function ReactionBar({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2">
-        {REACTIONS.map(({ type, emoji, label }) => {
+      <div className="flex flex-nowrap items-center gap-2">
+        {REACTIONS.map(({ type, label }) => {
           const count = optimisticCounts[type] ?? 0;
           const active = optimisticMine === type;
           const isPrimary = type === "red_flag";
@@ -84,11 +85,15 @@ export function ReactionBar({
                     }
                   : undefined
               }
-              className={`flex items-center gap-1 rounded-full border whitespace-nowrap transition-colors ${
+              className={`flex shrink-0 items-center gap-1 rounded-full border whitespace-nowrap transition-colors ${
                 isPrimary ? "px-2.5 py-1.5 text-sm font-medium" : "px-2.5 py-1 text-xs font-medium"
               } ${active ? "" : "border-border text-secondary hover:border-primary"}`}
             >
-              {isPrimary ? <span className="text-base">{emoji}</span> : <span>{label}</span>}
+              {isPrimary ? (
+                <Flag size={15} fill={active ? "currentColor" : "none"} />
+              ) : (
+                <span>{label}</span>
+              )}
               <span>{count > 0 ? count : ""}</span>
             </button>
           );

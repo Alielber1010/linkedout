@@ -13,6 +13,7 @@
 --   20260816082751  add_comments_and_post_views
 --   20260816082814  optimize_comments_rls_initplan
 --   20260816093129  add_reposts
+--   20260816093908  add_quoted_post_to_posts
 --
 -- To make future changes safely: use the Supabase MCP `apply_migration` (or `supabase db query`
 -- once the CLI is linked), which writes a matching file under supabase/migrations/ — keep this
@@ -60,11 +61,13 @@ create table public.posts (
   created_at    timestamptz not null default now(),
   is_anonymous  boolean not null default false,
   views         integer not null default 0,
+  quoted_post_id uuid references public.posts (id) on delete set null,
   constraint posts_body_check check (char_length(body) between 1 and 2000)
 );
 
 create index posts_created_at_idx on public.posts using btree (created_at desc);
 create index posts_tags_idx on public.posts using gin (tags);
+create index posts_quoted_post_id_idx on public.posts using btree (quoted_post_id);
 
 -- reactions: one reaction per (post, profile)
 create table public.reactions (

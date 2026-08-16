@@ -9,6 +9,7 @@ import { Avatar } from "@/components/avatar";
 import { deletePost } from "@/app/actions";
 import { canonicalTag, type ReactionType } from "@/lib/tags";
 import { timeAgo } from "@/lib/time";
+import type { QuotedPost } from "@/lib/posts";
 
 function renderBody(body: string) {
   const parts = body.split(/(#\w+)/g);
@@ -47,6 +48,7 @@ export function PostCard({
   commentCount,
   repostCount,
   repostedByMe,
+  quotedPost,
   onDeleted,
 }: {
   id: string;
@@ -65,6 +67,7 @@ export function PostCard({
   commentCount: number;
   repostCount: number;
   repostedByMe: boolean;
+  quotedPost?: QuotedPost | null;
   onDeleted?: (id: string) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -169,6 +172,31 @@ export function PostCard({
             {renderBody(body)}
           </p>
 
+          {quotedPost && (
+            <Link
+              href={`/post/${quotedPost.id}`}
+              className="mt-3 block rounded-xl border border-border p-3 hover:border-primary/60 transition-colors"
+            >
+              <div className="flex items-center gap-2 text-sm">
+                <Avatar content="" size={20} muted={quotedPost.isAnonymous} />
+                <span className="font-semibold">
+                  {!quotedPost.isAnonymous && quotedPost.displayName
+                    ? quotedPost.displayName
+                    : `Anonymous #${quotedPost.userNumber}`}
+                </span>
+                {!quotedPost.isAnonymous && quotedPost.username && (
+                  <span className="text-xs text-secondary">@{quotedPost.username}</span>
+                )}
+                <span className="text-xs text-secondary ml-auto">
+                  {timeAgo(quotedPost.createdAt)}
+                </span>
+              </div>
+              <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-secondary">
+                {quotedPost.body}
+              </p>
+            </Link>
+          )}
+
           <div className="mt-3 flex items-center justify-between gap-3">
             {isOptimistic ? (
               <span className="flex shrink-0 items-center gap-1.5 text-sm text-secondary">
@@ -192,7 +220,15 @@ export function PostCard({
                 {repostCount > 0 ? repostCount : ""}
               </span>
             ) : (
-              <RepostButton postId={id} count={repostCount} mine={repostedByMe} />
+              <RepostButton
+                postId={id}
+                count={repostCount}
+                mine={repostedByMe}
+                quotedBody={body}
+                quotedIdentity={identity}
+                quotedIsAnonymous={isAnonymous}
+                quotedCreatedAt={createdAt}
+              />
             )}
 
             <div className="min-w-0 overflow-x-auto">

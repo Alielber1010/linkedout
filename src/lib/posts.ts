@@ -11,7 +11,7 @@ export const EMPTY_REACTION_COUNTS: Record<ReactionType, number> = {
 };
 
 export const POSTS_SELECT =
-  "id, profile_id, body, tags, created_at, is_anonymous, views, profiles!posts_profile_id_fkey(user_number, display_name, headline, username), reactions(profile_id, reaction_type), comments(count), reposts(profile_id)";
+  "id, profile_id, body, tags, created_at, is_anonymous, views, quoted_post_id, profiles!posts_profile_id_fkey(user_number, display_name, headline, username), reactions(profile_id, reaction_type), comments(count), reposts(profile_id), quoted_post:quoted_post_id(id, body, created_at, is_anonymous, profile_id, profiles!posts_profile_id_fkey(user_number, display_name, username))";
 
 type ProfileRow = {
   user_number: number;
@@ -19,6 +19,21 @@ type ProfileRow = {
   headline: string | null;
   username: string;
 };
+
+type QuotedProfileRow = {
+  user_number: number;
+  display_name: string | null;
+  username: string;
+};
+
+type QuotedPostRow = {
+  id: string;
+  body: string;
+  created_at: string;
+  is_anonymous: boolean;
+  profile_id: string;
+  profiles: QuotedProfileRow | QuotedProfileRow[] | null;
+} | null;
 
 export type PostRow = {
   id: string;
@@ -32,6 +47,18 @@ export type PostRow = {
   reactions: { profile_id: string; reaction_type: string }[] | null;
   comments: { count: number }[] | null;
   reposts: { profile_id: string }[] | null;
+  quoted_post: QuotedPostRow | QuotedPostRow[] | null;
+};
+
+export type QuotedPost = {
+  id: string;
+  body: string;
+  createdAt: string;
+  isAnonymous: boolean;
+  profileId: string;
+  userNumber: number;
+  displayName: string | null;
+  username: string | null;
 };
 
 export type MappedPost = {
@@ -52,6 +79,7 @@ export type MappedPost = {
   commentCount: number;
   repostCount: number;
   repostedByMe: boolean;
+  quotedPost: QuotedPost | null;
 };
 
 export function mapPost(post: PostRow, currentUserId: string | null): MappedPost {
@@ -85,5 +113,24 @@ export function mapPost(post: PostRow, currentUserId: string | null): MappedPost
     repostedByMe:
       currentUserId != null &&
       (post.reposts ?? []).some((r) => r.profile_id === currentUserId),
+    quotedPost: mapQuotedPost(post.quoted_post),
+  };
+}
+
+function mapQuotedPost(row: QuotedPostRow | QuotedPostRow[] | null): QuotedPost | null {
+  const quoted = Array.isArray(row) ? row[0] : row;
+  if (!quoted) return null;
+
+  const profile = Array.isArray(quoted.profiles) ? quoted.profiles[0] : quoted.profiles;
+
+  return {
+    id: quoted.id,
+    body: quoted.body,
+    createdAt: quoted.created_at,
+    isAnonymous: quoted.is_anonymous,
+    profileId: quoted.profile_id,
+    userNumber: profile?.user_number ?? 0,
+    displayName: profile?.display_name ?? null,
+    username: profile?.username ?? null,
   };
 }
