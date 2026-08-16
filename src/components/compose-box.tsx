@@ -6,6 +6,7 @@ import { createPost } from "@/app/actions";
 import { TAGS, extractTags } from "@/lib/tags";
 import { EMPTY_REACTION_COUNTS, type MappedPost } from "@/lib/posts";
 import { Avatar } from "@/components/avatar";
+import { ToggleSwitch } from "@/components/toggle-switch";
 
 const MAX_SUGGESTIONS = 6;
 
@@ -138,6 +139,8 @@ export function ComposeBox({
         counts: { ...EMPTY_REACTION_COUNTS },
         mine: null,
         isOwner: true,
+        views: 0,
+        commentCount: 0,
       });
       setError(null);
       setAnonymous(defaultAnonymous);
@@ -219,18 +222,19 @@ export function ComposeBox({
                 {error && <p className="text-sm text-primary">{error}</p>}
 
                 <div className="flex items-center justify-between border-t border-border pt-3">
-                  <label className="flex items-center gap-1.5 text-xs text-secondary cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="anonymous"
+                  <div className="flex items-center gap-2.5">
+                    <input type="hidden" name="anonymous" value={anonymous ? "on" : ""} />
+                    <ToggleSwitch
                       checked={anonymous}
-                      onChange={(e) => setAnonymous(e.target.checked)}
-                      className="accent-primary"
+                      onChange={setAnonymous}
+                      label="Post anonymously"
                     />
-                    {anonymous
-                      ? "Posting anonymously"
-                      : "Posting under your profile"}
-                  </label>
+                    <span className="text-xs text-secondary">
+                      {anonymous
+                        ? "Posting anonymously"
+                        : "Posting under your profile"}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-3">
                     <span
                       className={`text-xs tabular-nums ${

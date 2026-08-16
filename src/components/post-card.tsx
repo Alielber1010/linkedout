@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Trash2, Link2, Check } from "lucide-react";
+import { Trash2, Link2, Check, MessageCircle, Eye } from "lucide-react";
 import { ReactionBar } from "@/components/reaction-bar";
 import { Avatar } from "@/components/avatar";
 import { deletePost } from "@/app/actions";
 import { canonicalTag, type ReactionType } from "@/lib/tags";
+import { timeAgo } from "@/lib/time";
 
 function renderBody(body: string) {
   const parts = body.split(/(#\w+)/g);
@@ -28,17 +29,6 @@ function renderBody(body: string) {
   });
 }
 
-function timeAgo(iso: string) {
-  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
 export function PostCard({
   id,
   profileId,
@@ -52,6 +42,8 @@ export function PostCard({
   counts,
   mine,
   isOwner,
+  views,
+  commentCount,
   onDeleted,
 }: {
   id: string;
@@ -66,6 +58,8 @@ export function PostCard({
   counts: Record<ReactionType, number>;
   mine: ReactionType | null;
   isOwner: boolean;
+  views: number;
+  commentCount: number;
   onDeleted?: (id: string) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -118,6 +112,7 @@ export function PostCard({
           seed={isAnonymous ? identity : profileId}
           content={isAnonymous ? "\u{1F47B}" : identity.charAt(0).toUpperCase()}
           muted={isAnonymous}
+          size={44}
         />
 
         <div className="min-w-0 flex-1">
@@ -169,7 +164,36 @@ export function PostCard({
             {renderBody(body)}
           </p>
 
-          <ReactionBar postId={id} counts={counts} mine={mine} />
+          <div className="mt-3 flex items-center justify-between gap-3">
+            {isOptimistic ? (
+              <span className="flex shrink-0 items-center gap-1.5 text-sm text-secondary">
+                <MessageCircle size={16} />
+                {commentCount > 0 ? commentCount : ""}
+              </span>
+            ) : (
+              <Link
+                href={`/post/${id}#comments`}
+                className="flex shrink-0 items-center gap-1.5 text-sm text-secondary hover:text-primary transition-colors"
+                aria-label={`${commentCount} comments`}
+              >
+                <MessageCircle size={16} />
+                {commentCount > 0 ? commentCount : ""}
+              </Link>
+            )}
+
+            <div className="min-w-0 overflow-x-auto">
+              <ReactionBar postId={id} counts={counts} mine={mine} />
+            </div>
+
+            <span
+              className="flex shrink-0 items-center gap-1.5 text-sm text-secondary"
+              aria-label={`${views} views`}
+              title="Views"
+            >
+              <Eye size={16} />
+              {views}
+            </span>
+          </div>
 
           {confirming && (
             <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm">

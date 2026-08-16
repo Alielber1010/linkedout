@@ -11,7 +11,7 @@ export const EMPTY_REACTION_COUNTS: Record<ReactionType, number> = {
 };
 
 export const POSTS_SELECT =
-  "id, profile_id, body, tags, created_at, is_anonymous, profiles!posts_profile_id_fkey(user_number, display_name, headline, username), reactions(profile_id, reaction_type)";
+  "id, profile_id, body, tags, created_at, is_anonymous, views, profiles!posts_profile_id_fkey(user_number, display_name, headline, username), reactions(profile_id, reaction_type), comments(count)";
 
 type ProfileRow = {
   user_number: number;
@@ -27,8 +27,10 @@ export type PostRow = {
   tags: string[] | null;
   created_at: string;
   is_anonymous: boolean;
+  views: number;
   profiles: ProfileRow | ProfileRow[] | null;
   reactions: { profile_id: string; reaction_type: string }[] | null;
+  comments: { count: number }[] | null;
 };
 
 export type MappedPost = {
@@ -45,6 +47,8 @@ export type MappedPost = {
   counts: Record<ReactionType, number>;
   mine: ReactionType | null;
   isOwner: boolean;
+  views: number;
+  commentCount: number;
 };
 
 export function mapPost(post: PostRow, currentUserId: string | null): MappedPost {
@@ -72,5 +76,7 @@ export function mapPost(post: PostRow, currentUserId: string | null): MappedPost
     counts,
     mine,
     isOwner: currentUserId != null && post.profile_id === currentUserId,
+    views: post.views ?? 0,
+    commentCount: post.comments?.[0]?.count ?? 0,
   };
 }

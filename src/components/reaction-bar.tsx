@@ -63,10 +63,11 @@ export function ReactionBar({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 mt-3">
+      <div className="flex flex-wrap items-center gap-2">
         {REACTIONS.map(({ type, emoji, label }) => {
           const count = optimisticCounts[type] ?? 0;
           const active = optimisticMine === type;
+          const isPrimary = type === "red_flag";
           return (
             <button
               key={type}
@@ -79,14 +80,15 @@ export function ReactionBar({
                   ? {
                       borderColor: COLOR_VAR[type],
                       color: COLOR_VAR[type],
+                      backgroundColor: isPrimary ? `color-mix(in srgb, ${COLOR_VAR[type]} 12%, transparent)` : undefined,
                     }
                   : undefined
               }
-              className={`flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors ${
-                active ? "" : "border-border text-secondary hover:border-primary"
-              }`}
+              className={`flex items-center gap-1 rounded-full border transition-colors ${
+                isPrimary ? "px-2.5 py-1.5 text-sm font-medium" : "px-2 py-1 text-xs"
+              } ${active ? "" : "border-border text-secondary hover:border-primary"}`}
             >
-              <span>{emoji}</span>
+              <span className={isPrimary ? "text-base" : undefined}>{emoji}</span>
               <span>{count > 0 ? count : ""}</span>
             </button>
           );

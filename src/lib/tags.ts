@@ -55,9 +55,9 @@ export const REACTIONS: {
   emoji: string;
   label: string;
 }[] = [
+  { type: "red_flag", emoji: "\u{1F6A9}", label: "Red Flag" },
   { type: "been_there", emoji: "\u{1F480}", label: "Been There" },
   { type: "same", emoji: "☕", label: "Same" },
-  { type: "red_flag", emoji: "\u{1F6A9}", label: "Red Flag" },
   { type: "escaped", emoji: "\u{1FAE1}", label: "Escaped" },
   { type: "corporate", emoji: "\u{1F921}", label: "Corporate Moment" },
 ];

@@ -46,6 +46,25 @@ export async function updateProfile(formData: FormData) {
   return { error: null };
 }
 
+export async function checkUsernameAvailable(rawUsername: string) {
+  const username = rawUsername.trim().toLowerCase();
+  if (!USERNAME_PATTERN.test(username)) return { available: false };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (error) return { available: false };
+  return { available: !data || data.id === user?.id };
+}
+
 export async function addCompany(formData: FormData) {
   const company = String(formData.get("company") ?? "").trim();
   const status = String(formData.get("status") ?? "");

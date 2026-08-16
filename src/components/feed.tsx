@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { ArrowUp } from "lucide-react";
 import { PostCard } from "@/components/post-card";
 import { ComposeBox } from "@/components/compose-box";
 import { loadMorePosts, loadNewerPosts } from "@/app/actions";
@@ -146,15 +147,18 @@ export function Feed({
       )}
 
       {pendingNewPosts.length > 0 && (
-        <button
-          type="button"
-          onClick={showNewPosts}
-          className="mb-4 block w-full rounded-full border border-primary bg-primary/5 px-4 py-2 text-center text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
-        >
-          {pendingNewPosts.length === 1
-            ? "1 new confession — show"
-            : `${pendingNewPosts.length} new confessions — show`}
-        </button>
+        <div className="sticky top-2 z-10 mb-4 flex justify-center">
+          <button
+            type="button"
+            onClick={showNewPosts}
+            className="animate-drop-in flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-colors hover:bg-primary-hover"
+          >
+            <ArrowUp size={15} strokeWidth={2.5} />
+            {pendingNewPosts.length === 1
+              ? "1 new confession"
+              : `${pendingNewPosts.length} new confessions`}
+          </button>
+        </div>
       )}
 
       {posts.length === 0 ? (

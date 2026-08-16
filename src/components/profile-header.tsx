@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Pencil } from "lucide-react";
-import { updateProfile } from "@/app/profile/actions";
+import { updateProfile, checkUsernameAvailable } from "@/app/profile/actions";
 import { Modal } from "@/components/modal";
+
+const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
+type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
 
 export function ProfileHeader({
   initial,
@@ -24,8 +27,39 @@ export function ProfileHeader({
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [headline, setHeadline] = useState(initialHeadline);
   const [username, setUsername] = useState(initialUsername);
+  const [usernameDraft, setUsernameDraft] = useState(initialUsername);
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleUsernameChange(value: string) {
+    const normalized = value.trim().toLowerCase();
+    setUsernameDraft(value);
+
+    if (checkTimer.current) clearTimeout(checkTimer.current);
+
+    if (normalized === initialUsername.toLowerCase()) {
+      setUsernameStatus("idle");
+      return;
+    }
+    if (!USERNAME_PATTERN.test(normalized)) {
+      setUsernameStatus(value ? "invalid" : "idle");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    checkTimer.current = setTimeout(async () => {
+      const result = await checkUsernameAvailable(normalized);
+      setUsernameStatus(result.available ? "available" : "taken");
+    }, 400);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (checkTimer.current) clearTimeout(checkTimer.current);
+    };
+  }, []);
 
   const shownName = displayName || `Anonymous #${userNumber}`;
 
@@ -48,7 +82,11 @@ export function ProfileHeader({
     <div className="relative px-5 pb-5 -mt-8">
       <button
         type="button"
-        onClick={() => setEditing(true)}
+        onClick={() => {
+          setUsernameDraft(username);
+          setUsernameStatus("idle");
+          setEditing(true);
+        }}
         aria-label="Edit profile"
         title="Edit profile"
         className="absolute right-5 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-secondary hover:text-primary hover:border-primary transition-colors"
@@ -80,7 +118,12 @@ export function ProfileHeader({
             <button
               type="submit"
               form="edit-profile-form"
-              disabled={pending}
+              disabled={
+                pending ||
+                usernameStatus === "checking" ||
+                usernameStatus === "taken" ||
+                usernameStatus === "invalid"
+              }
               className="rounded-full bg-primary hover:bg-primary-hover text-white text-sm font-medium px-4 py-1.5 disabled:opacity-50"
             >
               {pending ? "Saving..." : "Save"}
@@ -100,7 +143,8 @@ export function ProfileHeader({
                 <span className="pl-3 text-sm text-secondary">@</span>
                 <input
                   name="username"
-                  defaultValue={username}
+                  value={usernameDraft}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
                   placeholder="user1234"
                   pattern="[a-z0-9_]{3,20}"
                   title="Lowercase letters, numbers, and underscores only — 3 to 20 characters"
@@ -109,9 +153,23 @@ export function ProfileHeader({
                   className="w-full bg-transparent px-1.5 py-2 text-sm outline-none"
                 />
               </div>
-              <p className="mt-1 text-xs text-secondary">
-                Lowercase letters, numbers, underscores. 3–20 characters. Has
-                to be unique — no two ghosts can share a name.
+              <p
+                className={`mt-1 text-xs ${
+                  usernameStatus === "taken" || usernameStatus === "invalid"
+                    ? "text-primary"
+                    : usernameStatus === "available"
+                    ? "text-green-600"
+                    : "text-secondary"
+                }`}
+              >
+                {usernameStatus === "checking" && "Checking availability..."}
+                {usernameStatus === "available" && "That username is free."}
+                {usernameStatus === "taken" &&
+                  "Someone else already claimed that one."}
+                {usernameStatus === "invalid" &&
+                  "Lowercase letters, numbers, underscores. 3–20 characters."}
+                {usernameStatus === "idle" &&
+                  "Lowercase letters, numbers, underscores. 3–20 characters. Has to be unique — no two ghosts can share a name."}
               </p>
             </div>
             <div>

@@ -1,8 +1,8 @@
 -- LinkedOut database schema snapshot
--- Pulled from Supabase project "LinkedOut" (ref: arhmvwxhbuylvkujnmib) on 2026-08-15.
+-- Pulled from Supabase project "LinkedOut" (ref: arhmvwxhbuylvkujnmib) on 2026-08-16.
 -- This is a point-in-time dump of the remote schema for reference/version control.
 -- It does NOT replace real migration history. Remote migrations already applied
--- (tracked by Supabase, not yet mirrored as local files):
+-- (mirrored as local files under supabase/migrations/ starting 20260816082751):
 --   20260803082039  init_schema
 --   20260803082106  lock_down_trigger_function
 --   20260807155238  add_profile_identity_and_company_history
@@ -10,10 +10,12 @@
 --   20260815122649  lock_down_handle_new_user_rpc
 --   20260815180126  drop_posts_role_and_company
 --   20260815180426  add_profile_usernames
+--   20260816082751  add_comments_and_post_views
+--   20260816082814  optimize_comments_rls_initplan
 --
--- To make future changes safely: use the Supabase MCP `execute_sql` (or `supabase db query`
--- once the CLI is linked) to iterate, then commit a proper migration file under
--- supabase/migrations/ before applying to production.
+-- To make future changes safely: use the Supabase MCP `apply_migration` (or `supabase db query`
+-- once the CLI is linked), which writes a matching file under supabase/migrations/ — keep this
+-- snapshot in sync afterward.
 
 -- ============================================================================
 -- Extensions
@@ -56,6 +58,7 @@ create table public.posts (
   tags          text[] not null default '{}',
   created_at    timestamptz not null default now(),
   is_anonymous  boolean not null default false,
+  views         integer not null default 0,
   constraint posts_body_check check (char_length(body) between 1 and 2000)
 );
 
@@ -88,6 +91,18 @@ create table public.profile_companies (
 );
 
 create index profile_companies_profile_id_idx on public.profile_companies using btree (profile_id);
+
+-- comments: flat, one thread per post
+create table public.comments (
+  id          uuid primary key default gen_random_uuid(),
+  post_id     uuid not null references public.posts (id) on delete cascade,
+  profile_id  uuid not null references public.profiles (id) on delete cascade,
+  body        text not null,
+  created_at  timestamptz not null default now(),
+  constraint comments_body_check check (char_length(body) between 1 and 2000)
+);
+
+create index comments_post_id_created_at_idx on public.comments using btree (post_id, created_at);
 
 -- ============================================================================
 -- Functions & triggers
@@ -123,6 +138,20 @@ create trigger on_auth_user_created
 -- trigger, so lock direct RPC access down.
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
+-- posts.views: simple counter, bumped only via this narrow security-definer
+-- RPC — posts has no RLS update policy today and this doesn't add one.
+create or replace function public.increment_post_views(post_id uuid)
+returns void
+language sql
+security definer
+set search_path = 'public'
+as $$
+  update public.posts set views = views + 1 where id = post_id;
+$$;
+
+revoke execute on function public.increment_post_views(uuid) from public, anon;
+grant execute on function public.increment_post_views(uuid) to authenticated;
+
 -- ============================================================================
 -- Row Level Security
 -- ============================================================================
@@ -131,6 +160,7 @@ alter table public.profiles enable row level security;
 alter table public.posts enable row level security;
 alter table public.reactions enable row level security;
 alter table public.profile_companies enable row level security;
+alter table public.comments enable row level security;
 
 -- profiles
 create policy "profiles are publicly readable"
@@ -188,3 +218,16 @@ create policy "users can insert their own company history"
 create policy "users can delete their own company history"
   on public.profile_companies for delete
   using (auth.uid() = profile_id);
+
+-- comments
+create policy "comments are publicly readable"
+  on public.comments for select
+  using (true);
+
+create policy "users can insert their own comments"
+  on public.comments for insert
+  with check ((select auth.uid()) = profile_id);
+
+create policy "users can delete their own comments"
+  on public.comments for delete
+  using ((select auth.uid()) = profile_id);
