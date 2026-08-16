@@ -28,7 +28,7 @@ export function Avatar({
       className="relative shrink-0 overflow-hidden rounded-full"
       style={{ width: size, height: size }}
     >
-      <Image src="/angry_profile.png" alt="" fill sizes={`${size}px`} className="object-cover" />
+      <Image src="/angry_profile_v1.png" alt="" fill sizes={`${size}px`} className="object-cover" />
     </div>
   );
 }
