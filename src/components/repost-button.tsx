@@ -27,7 +27,7 @@ export function RepostButton({
   const [optimisticMine, setOptimisticMine] = useState(mine);
   const [menuOpen, setMenuOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
 
   if (count !== prevProps.count || mine !== prevProps.mine) {
@@ -66,12 +66,13 @@ export function RepostButton({
       <button
         type="button"
         onClick={() => setMenuOpen((v) => !v)}
+        disabled={pending}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         aria-pressed={optimisticMine}
         aria-label={`Repost${optimisticCount > 0 ? ` (${optimisticCount})` : ""}`}
         title="Repost"
-        className={`flex shrink-0 items-center gap-1.5 text-sm transition-colors ${
+        className={`flex shrink-0 items-center gap-1.5 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
           optimisticMine ? "text-green-600" : "text-secondary hover:text-green-600"
         }`}
       >

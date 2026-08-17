@@ -22,6 +22,19 @@ Workflow:
 4. Report bugs with: the flow you ran, the exact assertion or visual issue,
    and the screenshot path so it can be inspected.
 
+**Rapid-interaction races — test these deliberately, not just single clean
+clicks.** A confirmed bug class in this app: a user clicks something with an
+optimistic UI update + async server call, then clicks something *else*
+before the first call resolves, and stale state from the first call
+clobbers the second. Any component using `useTransition` +
+optimistic-then-revert-on-error state (reaction-bar, repost-button,
+comment-thread, compose-box) is a candidate. For each one, script: click
+action A, immediately click action B (no wait), then assert final state
+matches B, not a flicker back toward A. Also check the trigger stays
+disabled while its own request is in flight (`disabled={pending}`) — a
+missing disable there is the usual root cause. Flag any component missing
+this guard even if you don't have time to fix it yourself.
+
 Known things to actually exercise, not assume:
 - Auth: password sign-in/up, magic link (can't complete the email click in
   an automated run, but confirm `/auth/callback` at least responds sanely

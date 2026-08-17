@@ -26,7 +26,7 @@ export function ReactionBar({
   const [optimisticMine, setOptimisticMine] = useState(mine);
   const [optimisticCounts, setOptimisticCounts] = useState(counts);
   const [error, setError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   // Re-seed from fresh server props (e.g. another reaction elsewhere triggered
   // a feed revalidation) without clobbering an in-flight optimistic click.
@@ -74,6 +74,7 @@ export function ReactionBar({
             <button
               key={type}
               onClick={() => handleClick(type)}
+              disabled={pending}
               title={label}
               aria-label={`${label}${count > 0 ? ` (${count})` : ""}`}
               aria-pressed={active}
@@ -86,7 +87,7 @@ export function ReactionBar({
                     }
                   : undefined
               }
-              className={`flex shrink-0 items-center gap-1 rounded-full border whitespace-nowrap transition-colors ${
+              className={`flex shrink-0 items-center gap-1 rounded-full border whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 isPrimary ? "px-2.5 py-1.5 text-sm font-medium" : "px-2.5 py-1 text-xs font-medium"
               } ${active ? "" : "border-border text-secondary hover:border-primary"}`}
             >
