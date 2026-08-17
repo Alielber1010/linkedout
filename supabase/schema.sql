@@ -14,6 +14,8 @@
 --   20260816082814  optimize_comments_rls_initplan
 --   20260816093129  add_reposts
 --   20260816093908  add_quoted_post_to_posts
+--   20260817104813  add_toggle_reaction_rpc
+--   20260817104852  add_toggle_repost_rpc
 --
 -- To make future changes safely: use the Supabase MCP `apply_migration` (or `supabase db query`
 -- once the CLI is linked), which writes a matching file under supabase/migrations/ — keep this
@@ -165,6 +167,53 @@ $$;
 
 revoke execute on function public.increment_post_views(uuid) from public, anon;
 grant execute on function public.increment_post_views(uuid) to authenticated;
+
+-- Atomic toggles: read-then-write in one DB transaction so rapid concurrent
+-- clicks can't race each other into an inconsistent state.
+create or replace function public.toggle_reaction(p_post_id uuid, p_reaction_type text)
+returns void
+language plpgsql
+security invoker
+set search_path = 'public'
+as $$
+begin
+  delete from public.reactions
+  where post_id = p_post_id
+    and profile_id = auth.uid()
+    and reaction_type = p_reaction_type;
+
+  if not found then
+    insert into public.reactions (post_id, profile_id, reaction_type)
+    values (p_post_id, auth.uid(), p_reaction_type)
+    on conflict (post_id, profile_id) do update set reaction_type = excluded.reaction_type;
+  end if;
+end;
+$$;
+
+grant execute on function public.toggle_reaction(uuid, text) to authenticated;
+revoke execute on function public.toggle_reaction(uuid, text) from public, anon;
+
+create or replace function public.toggle_repost(p_post_id uuid)
+returns void
+language plpgsql
+security invoker
+set search_path = 'public'
+as $$
+begin
+  delete from public.reposts
+  where post_id = p_post_id
+    and profile_id = auth.uid();
+
+  if not found then
+    insert into public.reposts (post_id, profile_id)
+    values (p_post_id, auth.uid())
+    on conflict (post_id, profile_id) do nothing;
+  end if;
+end;
+$$;
+
+grant execute on function public.toggle_repost(uuid) to authenticated;
+revoke execute on function public.toggle_repost(uuid) from public, anon;
 
 -- ============================================================================
 -- Row Level Security

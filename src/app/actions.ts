@@ -170,31 +170,15 @@ export async function react(postId: string, reactionType: ReactionType) {
 
   if (!user) return { error: "Not signed in yet, refresh and try again." };
 
-  const { data: existing } = await supabase
-    .from("reactions")
-    .select("reaction_type")
-    .eq("post_id", postId)
-    .eq("profile_id", user.id)
-    .maybeSingle();
-
-  // Reactions are optimistic on the client and don't need to force a refetch
-  // of the whole feed the way a new/deleted post does — that would reload and
-  // re-render every card on screen just to reflect a single toggle.
-  if (existing?.reaction_type === reactionType) {
-    const { error } = await supabase
-      .from("reactions")
-      .delete()
-      .eq("post_id", postId)
-      .eq("profile_id", user.id);
-    if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("reactions").upsert({
-      post_id: postId,
-      profile_id: user.id,
-      reaction_type: reactionType,
-    });
-    if (error) return { error: error.message };
-  }
+  // toggle_reaction does the read-then-write atomically in one DB
+  // transaction (RPC), so rapid repeated clicks can't race each other
+  // into an inconsistent state the way a separate select-then-branch
+  // from the client could.
+  const { error } = await supabase.rpc("toggle_reaction", {
+    p_post_id: postId,
+    p_reaction_type: reactionType,
+  });
+  if (error) return { error: error.message };
 
   return { error: null };
 }
@@ -209,27 +193,10 @@ export async function toggleRepost(postId: string) {
 
   if (!user) return { error: "Not signed in yet, refresh and try again." };
 
-  const { data: existing } = await supabase
-    .from("reposts")
-    .select("post_id")
-    .eq("post_id", postId)
-    .eq("profile_id", user.id)
-    .maybeSingle();
-
-  if (existing) {
-    const { error } = await supabase
-      .from("reposts")
-      .delete()
-      .eq("post_id", postId)
-      .eq("profile_id", user.id);
-    if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("reposts").insert({
-      post_id: postId,
-      profile_id: user.id,
-    });
-    if (error) return { error: error.message };
-  }
+  // Atomic read-then-write via RPC — same rapid-click race the reaction
+  // toggle had (see toggle_reaction).
+  const { error } = await supabase.rpc("toggle_repost", { p_post_id: postId });
+  if (error) return { error: error.message };
 
   return { error: null };
 }
