@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { checkUsernameAvailable } from "@/app/profile/actions";
 
 type Mode = "sign-in" | "sign-up";
+type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
+const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
 
 function Wordmark({ size = "text-2xl" }: { size?: string }) {
   return (
@@ -21,10 +24,35 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [magicLink, setMagicLink] = useState(false);
+  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleUsernameChange(value: string) {
+    setUsername(value);
+    const normalized = value.trim().toLowerCase();
+
+    if (checkTimer.current) clearTimeout(checkTimer.current);
+
+    if (!normalized) {
+      setUsernameStatus("idle");
+      return;
+    }
+    if (!USERNAME_PATTERN.test(normalized)) {
+      setUsernameStatus("invalid");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    checkTimer.current = setTimeout(async () => {
+      const result = await checkUsernameAvailable(normalized);
+      setUsernameStatus(result.available ? "available" : "taken");
+    }, 400);
+  }
 
   async function goHome() {
     router.push("/");
@@ -60,36 +88,68 @@ export default function LoginPage() {
 
     const supabase = createClient();
 
-    if (mode === "sign-up") {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo:
-            typeof window !== "undefined"
-              ? `${window.location.origin}/auth/callback`
-              : undefined,
-        },
-      });
-      setPending(false);
-      if (error) return setError(error.message);
-      if (!data.session) {
-        setNotice(
-          "Check your inbox to confirm your email. Then come back and log in."
-        );
+    try {
+      if (mode === "sign-up") {
+        const normalizedUsername = username.trim().toLowerCase();
+        if (!USERNAME_PATTERN.test(normalizedUsername)) {
+          return setError(
+            "Pick a username first: 3-20 characters, lowercase letters/numbers/underscores."
+          );
+        }
+        if (usernameStatus === "taken") {
+          return setError("That username's taken — pick another.");
+        }
+
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo:
+              typeof window !== "undefined"
+                ? `${window.location.origin}/auth/callback`
+                : undefined,
+          },
+        });
+        if (error) return setError(error.message);
+        if (!data.session || !data.user) {
+          setNotice(
+            "Check your inbox to confirm your email. Then come back and log in — you can set your username from your profile once you're in."
+          );
+          return;
+        }
+
+        // Use the same client session that just signed up, rather than a
+        // server action — avoids any race with the auth cookie propagating
+        // to the server before the next request reads it.
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ username: normalizedUsername })
+          .eq("id", data.user.id);
+        if (profileError) {
+          if (profileError.code === "23505") {
+            return setError("That username's taken — someone just claimed it.");
+          }
+          return setError(profileError.message);
+        }
+        goHome();
         return;
       }
-      goHome();
-      return;
-    }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setPending(false);
-    if (error) return setError(error.message);
-    goHome();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) return setError(error.message);
+      goHome();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong — try again in a moment."
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   async function handleAnonymous() {
@@ -171,6 +231,41 @@ export default function LoginPage() {
               />
             </div>
 
+            {mode === "sign-up" && !magicLink && (
+              <div>
+                <div className="flex items-center rounded-md border border-border bg-background focus-within:border-primary">
+                  <span className="pl-3 text-sm text-secondary">@</span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="username"
+                    value={username}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
+                    pattern="[a-z0-9_]{3,20}"
+                    maxLength={20}
+                    className="w-full bg-transparent px-1.5 py-2 text-sm outline-none"
+                  />
+                </div>
+                <p
+                  className={`mt-1 text-xs ${
+                    usernameStatus === "taken" || usernameStatus === "invalid"
+                      ? "text-primary"
+                      : usernameStatus === "available"
+                      ? "text-green-600"
+                      : "text-secondary"
+                  }`}
+                >
+                  {usernameStatus === "checking" && "Checking availability..."}
+                  {usernameStatus === "available" && "That username is free."}
+                  {usernameStatus === "taken" && "Someone already claimed that one."}
+                  {usernameStatus === "invalid" &&
+                    "Lowercase letters, numbers, underscores. 3–20 characters."}
+                  {usernameStatus === "idle" &&
+                    "This is how people will @ you — you can change it later."}
+                </p>
+              </div>
+            )}
+
             {!magicLink && (
               <div>
                 <input
@@ -194,7 +289,15 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={pending}
+              disabled={
+                pending ||
+                (mode === "sign-up" &&
+                  !magicLink &&
+                  (usernameStatus === "checking" ||
+                    usernameStatus === "taken" ||
+                    usernameStatus === "invalid" ||
+                    usernameStatus === "idle"))
+              }
               className="w-full rounded-full bg-primary hover:bg-primary-hover text-white text-sm font-medium py-2 disabled:opacity-50"
             >
               {pending

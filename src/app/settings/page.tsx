@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AnonymousDefaultToggle } from "@/components/anonymous-default-toggle";
 import { AppearanceToggle } from "@/components/appearance-toggle";
 import { SignOutButton } from "@/components/sign-out-button";
+import { LinkAccountForm } from "@/components/link-account-form";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -34,6 +35,13 @@ export default async function SettingsPage() {
         <h2 className="font-semibold mb-4">Appearance</h2>
         <AppearanceToggle />
       </div>
+
+      {user.is_anonymous && (
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <h2 className="font-semibold mb-4">Save your account</h2>
+          <LinkAccountForm />
+        </div>
+      )}
 
       <div className="rounded-xl border border-border bg-surface p-5">
         <h2 className="font-semibold mb-4">Account</h2>
