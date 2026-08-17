@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Flag } from "lucide-react";
+import { Heart } from "lucide-react";
 import { react } from "@/app/actions";
-import { REACTIONS, type ReactionType } from "@/lib/tags";
+import type { ReactionType } from "@/lib/tags";
 
-const COLOR_VAR: Record<ReactionType, string> = {
-  been_there: "var(--reaction-been-there)",
-  same: "var(--reaction-same)",
-  red_flag: "var(--reaction-red-flag)",
-  escaped: "var(--reaction-escaped)",
-  corporate: "var(--reaction-corporate)",
-};
+const LIKE_REACTION: ReactionType = "red_flag";
+
+function formatCount(count: number) {
+  if (count >= 1_000_000) {
+    return `${(count / 1_000_000).toFixed(1).replace(".0", "")}M`;
+  }
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1).replace(".0", "")}K`;
+  }
+  return count > 0 ? String(count) : "";
+}
 
 export function ReactionBar({
   postId,
@@ -28,13 +32,17 @@ export function ReactionBar({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  // Re-seed from fresh server props (e.g. another reaction elsewhere triggered
-  // a feed revalidation) without clobbering an in-flight optimistic click.
   if (counts !== prevProps.counts || mine !== prevProps.mine) {
     setPrevProps({ counts, mine });
     setOptimisticCounts(counts);
     setOptimisticMine(mine);
   }
+
+  const optimisticTotal = Object.values(optimisticCounts).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+  const active = optimisticMine === LIKE_REACTION;
 
   function handleClick(type: ReactionType) {
     const wasMine = optimisticMine;
@@ -57,50 +65,30 @@ export function ReactionBar({
       } catch {
         setOptimisticCounts(wasCounts);
         setOptimisticMine(wasMine);
-        setError("Reaction didn't save — try again.");
+        setError("Reaction didn't save - try again.");
         setTimeout(() => setError(null), 4000);
       }
     });
   }
 
   return (
-    <div>
-      <div className="flex flex-nowrap items-center gap-2">
-        {REACTIONS.map(({ type, label }) => {
-          const count = optimisticCounts[type] ?? 0;
-          const active = optimisticMine === type;
-          const isPrimary = type === "red_flag";
-          return (
-            <button
-              key={type}
-              onClick={() => handleClick(type)}
-              disabled={pending}
-              title={label}
-              aria-label={`${label}${count > 0 ? ` (${count})` : ""}`}
-              aria-pressed={active}
-              style={
-                active
-                  ? {
-                      borderColor: COLOR_VAR[type],
-                      color: COLOR_VAR[type],
-                      backgroundColor: isPrimary ? `color-mix(in srgb, ${COLOR_VAR[type]} 12%, transparent)` : undefined,
-                    }
-                  : undefined
-              }
-              className={`flex shrink-0 items-center gap-1 rounded-full border whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isPrimary ? "px-2.5 py-1.5 text-sm font-medium" : "px-2.5 py-1 text-xs font-medium"
-              } ${active ? "" : "border-border text-secondary hover:border-primary"}`}
-            >
-              {isPrimary ? (
-                <Flag size={15} fill={active ? "currentColor" : "none"} />
-              ) : (
-                <span>{label}</span>
-              )}
-              <span>{count > 0 ? count : ""}</span>
-            </button>
-          );
-        })}
-      </div>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => handleClick(LIKE_REACTION)}
+        disabled={pending}
+        title="Like"
+        aria-label={`Like${optimisticTotal > 0 ? ` (${optimisticTotal})` : ""}`}
+        aria-pressed={active}
+        className={`group flex h-9 min-w-0 items-center gap-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+          active ? "text-pink-600" : "text-secondary hover:text-pink-600"
+        }`}
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors group-hover:bg-pink-600/10">
+          <Heart size={18} fill={active ? "currentColor" : "none"} />
+        </span>
+        <span className="min-w-0 tabular-nums">{formatCount(optimisticTotal)}</span>
+      </button>
       {error && <p className="mt-1 text-xs text-primary">{error}</p>}
     </div>
   );

@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Trash2, Link2, Check, MessageCircle, Eye, Repeat2 } from "lucide-react";
+import {
+  Bookmark,
+  Check,
+  Eye,
+  MessageCircle,
+  Repeat2,
+  Share,
+  Trash2,
+} from "lucide-react";
 import { ReactionBar } from "@/components/reaction-bar";
 import { RepostButton } from "@/components/repost-button";
 import { Avatar } from "@/components/avatar";
@@ -29,6 +37,16 @@ function renderBody(body: string) {
     }
     return part;
   });
+}
+
+function formatActionCount(count: number) {
+  if (count >= 1_000_000) {
+    return `${(count / 1_000_000).toFixed(1).replace(".0", "")}M`;
+  }
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1).replace(".0", "")}K`;
+  }
+  return count > 0 ? String(count) : "";
 }
 
 export function PostCard({
@@ -144,17 +162,6 @@ export function PostCard({
                 {timeAgo(createdAt)}
               </Link>
             )}
-            {!isOptimistic && (
-              <button
-                type="button"
-                onClick={handleShare}
-                aria-label="Copy link to confession"
-                title="Copy link"
-                className="text-secondary hover:text-primary transition-colors"
-              >
-                {copied ? <Check size={14} /> : <Link2 size={14} />}
-              </button>
-            )}
             {isOwner && (
               <button
                 type="button"
@@ -197,27 +204,42 @@ export function PostCard({
             </Link>
           )}
 
-          <div className="mt-3 flex items-center justify-between gap-3">
+          <div
+            className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_36px_36px] items-center gap-1 text-secondary"
+            aria-label={`${commentCount} comments, ${repostCount} reposts, ${views} views`}
+          >
             {isOptimistic ? (
-              <span className="flex shrink-0 items-center gap-1.5 text-sm text-secondary">
-                <MessageCircle size={16} />
-                {commentCount > 0 ? commentCount : ""}
+              <span className="group flex h-9 min-w-0 items-center gap-1.5 text-sm">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full">
+                  <MessageCircle size={18} />
+                </span>
+                <span className="min-w-0 tabular-nums">
+                  {formatActionCount(commentCount)}
+                </span>
               </span>
             ) : (
               <Link
                 href={`/post/${id}#comments`}
-                className="flex shrink-0 items-center gap-1.5 text-sm text-secondary hover:text-primary transition-colors"
+                className="group flex h-9 min-w-0 items-center gap-1.5 text-sm transition-colors hover:text-sky-500"
                 aria-label={`${commentCount} comments`}
               >
-                <MessageCircle size={16} />
-                {commentCount > 0 ? commentCount : ""}
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors group-hover:bg-sky-500/10">
+                  <MessageCircle size={18} />
+                </span>
+                <span className="min-w-0 tabular-nums">
+                  {formatActionCount(commentCount)}
+                </span>
               </Link>
             )}
 
             {isOptimistic ? (
-              <span className="flex shrink-0 items-center gap-1.5 text-sm text-secondary">
-                <Repeat2 size={18} />
-                {repostCount > 0 ? repostCount : ""}
+              <span className="group flex h-9 min-w-0 items-center gap-1.5 text-sm">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full">
+                  <Repeat2 size={18} />
+                </span>
+                <span className="min-w-0 tabular-nums">
+                  {formatActionCount(repostCount)}
+                </span>
               </span>
             ) : (
               <RepostButton
@@ -231,18 +253,43 @@ export function PostCard({
               />
             )}
 
-            <div className="min-w-0 overflow-x-auto">
-              <ReactionBar postId={id} counts={counts} mine={mine} />
-            </div>
+            <ReactionBar postId={id} counts={counts} mine={mine} />
 
             <span
-              className="flex shrink-0 items-center gap-1.5 text-sm text-secondary"
+              className="group flex h-9 min-w-0 items-center gap-1.5 text-sm"
               aria-label={`${views} views`}
               title="Views"
             >
-              <Eye size={16} />
-              {views}
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full">
+                <Eye size={18} />
+              </span>
+              <span className="min-w-0 tabular-nums">
+                {formatActionCount(views)}
+              </span>
             </span>
+
+            <button
+              type="button"
+              aria-label="Bookmark"
+              title="Bookmark"
+              className="group grid h-9 w-9 place-items-center justify-self-end rounded-full transition-colors hover:bg-sky-500/10 hover:text-sky-500"
+            >
+              <Bookmark size={18} />
+            </button>
+
+            {!isOptimistic ? (
+              <button
+                type="button"
+                onClick={handleShare}
+                aria-label="Copy link to confession"
+                title={copied ? "Copied" : "Share"}
+                className="group grid h-9 w-9 place-items-center justify-self-end rounded-full transition-colors hover:bg-sky-500/10 hover:text-sky-500"
+              >
+                {copied ? <Check size={18} /> : <Share size={18} />}
+              </button>
+            ) : (
+              <span className="h-9 w-9" aria-hidden />
+            )}
           </div>
 
           {confirming && (

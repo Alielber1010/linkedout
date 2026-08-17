@@ -72,12 +72,16 @@ export function RepostButton({
         aria-pressed={optimisticMine}
         aria-label={`Repost${optimisticCount > 0 ? ` (${optimisticCount})` : ""}`}
         title="Repost"
-        className={`flex shrink-0 items-center gap-1.5 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`group flex h-9 min-w-0 items-center gap-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
           optimisticMine ? "text-green-600" : "text-secondary hover:text-green-600"
         }`}
       >
-        <Repeat2 size={18} />
-        {optimisticCount > 0 ? optimisticCount : ""}
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors group-hover:bg-green-600/10">
+          <Repeat2 size={18} />
+        </span>
+        <span className="min-w-0 tabular-nums">
+          {optimisticCount > 0 ? optimisticCount : ""}
+        </span>
       </button>
 
       {menuOpen && (
