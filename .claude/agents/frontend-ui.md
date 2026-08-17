@@ -19,3 +19,23 @@ and layout files — the presentation layer.
   reachable by keyboard, don't drop `aria-label`s that already exist.
 - After a UI change, prefer having the `qa-visual` agent verify it visually
   (screenshot + read back) over asserting success from code alone.
+
+## Optimistic-mutation pillar
+
+Any button that toggles server state optimistically (reactions, reposts,
+future ones) follows the same three-part pattern — see
+`reaction-bar.tsx`/`repost-button.tsx` as the reference:
+1. Update local state immediately (optimistic), capturing the pre-click
+   values in the closure so you can revert to *exactly* that, not just
+   "off"/"zero".
+2. **Disable the trigger for the duration of its own `useTransition`
+   `pending`** — this is the actual fix for rapid-click bugs, not a nice-to-
+   have. Without it, a second click before the first request resolves can
+   race, and out-of-order responses can leave the UI showing stale state.
+3. On error: revert to the captured pre-click values and show a message
+   that auto-dismisses (`setTimeout`) rather than sticking around forever.
+
+Don't reinvent this per-component — copy the pattern, don't debounce as a
+substitute for disabling (debouncing delays the problem, it doesn't fix the
+race; the backend also needs to be concurrency-safe regardless, see
+`backend-supabase`'s pillars).

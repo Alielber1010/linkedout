@@ -22,18 +22,40 @@ Workflow:
 4. Report bugs with: the flow you ran, the exact assertion or visual issue,
    and the screenshot path so it can be inspected.
 
-**Rapid-interaction races — test these deliberately, not just single clean
-clicks.** A confirmed bug class in this app: a user clicks something with an
-optimistic UI update + async server call, then clicks something *else*
-before the first call resolves, and stale state from the first call
-clobbers the second. Any component using `useTransition` +
-optimistic-then-revert-on-error state (reaction-bar, repost-button,
-comment-thread, compose-box) is a candidate. For each one, script: click
-action A, immediately click action B (no wait), then assert final state
-matches B, not a flicker back toward A. Also check the trigger stays
-disabled while its own request is in flight (`disabled={pending}`) — a
-missing disable there is the usual root cause. Flag any component missing
-this guard even if you don't have time to fix it yourself.
+## Concurrency/consistency checklist — run this against any toggle, counter, or optimistic-mutation feature, not just reactions
+
+This app had a real bug here (`react()`/`toggleRepost()` raced under rapid
+clicks — fixed via atomic `toggle_reaction`/`toggle_repost` RPCs,
+`tests/qa/rapid-reaction.spec.ts` is the regression spec). When testing any
+similar feature (new reaction types, follows, bookmarks, etc.), check each
+of these — most should already be true by construction if `backend-supabase`
+followed its concurrency pillars, but verify, don't assume:
+
+1. **Rapid-click race**: click action A, immediately click action B before
+   A resolves (no wait). Final state must match B, not flicker back toward
+   A. `tests/qa/rapid-reaction.spec.ts` is the template.
+2. **Trigger disables while pending**: inspect the button for
+   `disabled={pending}` (or equivalent) during its own in-flight request —
+   the actual fix for #1, not optional polish.
+3. **Double-counting**: toggle the same action on/off/on rapidly, then
+   reload — count should reflect exactly one net state, never duplicated.
+4. **Network failure rollback**: if you can force a failed request (bad
+   postId, offline), confirm the UI reverts to pre-click state and shows an
+   error that auto-dismisses, not one that hangs forever.
+5. **Cross-request consistency after reload**: after any rapid-click
+   sequence, reload and confirm the persisted DB state matches what the UI
+   settled on — this is the ground truth check, screenshots of the
+   optimistic UI alone don't prove anything landed.
+6. **Orphan check** (only when touching schema): deleting a post/profile
+   that has related rows (reactions, comments, reposts) shouldn't leave
+   orphans or error — confirmed via `on delete cascade`, spot-check with
+   `execute_sql` after a delete in a throwaway test row, not assumed.
+
+Out of scope for this agent to fix, but flag if you notice them: no
+cross-tab sync (two tabs can show different reaction state until reload —
+accepted, see `backend-supabase` pillars) and no rate limit on
+`react`/`toggleRepost` (accepted tradeoff after BotID false-positived on
+reactions — don't "fix" by re-adding it without discussing).
 
 Known things to actually exercise, not assume:
 - Auth: password sign-in/up, magic link (can't complete the email click in
