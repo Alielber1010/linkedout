@@ -124,7 +124,9 @@ export default function LoginPage() {
           Log in to vent under a name, or skip it and stay a ghost.
         </p>
 
-        <div className="mt-8 rounded-xl border border-border p-5">
+        <div
+          className="mt-8 rounded-2xl border border-border p-5 shadow-[0_0_50px_-20px_var(--primary)]"
+        >
           <div
             className={`flex rounded-full border border-border p-0.5 mb-5 text-sm ${
               magicLink ? "opacity-40 pointer-events-none" : ""
@@ -229,9 +231,9 @@ export default function LoginPage() {
             type="button"
             onClick={handleAnonymous}
             disabled={pending}
-            className="w-full rounded-full border border-border hover:border-primary text-sm font-medium py-2 disabled:opacity-50"
+            className="w-full rounded-full border border-primary/40 bg-black text-white text-sm font-semibold py-2.5 shadow-[0_0_20px_-6px_var(--primary)] transition-shadow hover:shadow-[0_0_28px_-4px_var(--primary)] disabled:opacity-50"
           >
-            Continue anonymously
+            Continue anonymously <span aria-hidden>👻</span>
           </button>
           <p className="mt-2 text-center text-xs text-secondary">
             No name, no profile, no trail. Just vibes and grievances.
