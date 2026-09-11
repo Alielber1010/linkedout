@@ -58,6 +58,7 @@ export function PostCard({
   displayName,
   headline,
   username,
+  avatarUrl,
   isAnonymous,
   counts,
   mine,
@@ -77,6 +78,7 @@ export function PostCard({
   displayName: string | null;
   headline: string | null;
   username: string | null;
+  avatarUrl?: string | null;
   isAnonymous: boolean;
   counts: Record<ReactionType, number>;
   mine: ReactionType | null;
@@ -138,6 +140,9 @@ export function PostCard({
           seed={isAnonymous ? identity : profileId}
           content={isAnonymous ? "\u{1F47B}" : identity.charAt(0).toUpperCase()}
           muted={isAnonymous}
+          // Anonymous posts keep the muted ghost avatar — passing the
+          // author's uploaded photo here would deanonymize them.
+          src={isAnonymous ? null : avatarUrl}
           size={44}
         />
 
@@ -185,7 +190,12 @@ export function PostCard({
               className="mt-3 block rounded-xl border border-border p-3 hover:border-primary/60 transition-colors"
             >
               <div className="flex items-center gap-2 text-sm">
-                <Avatar content="" size={20} muted={quotedPost.isAnonymous} />
+                <Avatar
+                  content=""
+                  size={20}
+                  muted={quotedPost.isAnonymous}
+                  src={quotedPost.isAnonymous ? null : quotedPost.avatarUrl}
+                />
                 <span className="font-semibold">
                   {!quotedPost.isAnonymous && quotedPost.displayName
                     ? quotedPost.displayName

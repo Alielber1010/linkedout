@@ -11,19 +11,21 @@ export const EMPTY_REACTION_COUNTS: Record<ReactionType, number> = {
 };
 
 export const POSTS_SELECT =
-  "id, profile_id, body, tags, created_at, is_anonymous, views, quoted_post_id, profiles!posts_profile_id_fkey(user_number, display_name, headline, username), reactions(profile_id, reaction_type), comments(count), reposts(profile_id), quoted_post:quoted_post_id(id, body, created_at, is_anonymous, profile_id, profiles!posts_profile_id_fkey(user_number, display_name, username))";
+  "id, profile_id, body, tags, created_at, is_anonymous, views, quoted_post_id, profiles!posts_profile_id_fkey(user_number, display_name, headline, username, avatar_url), reactions(profile_id, reaction_type), comments(count), reposts(profile_id), quoted_post:quoted_post_id(id, body, created_at, is_anonymous, profile_id, profiles!posts_profile_id_fkey(user_number, display_name, username, avatar_url))";
 
 type ProfileRow = {
   user_number: number;
   display_name: string | null;
   headline: string | null;
   username: string;
+  avatar_url: string | null;
 };
 
 type QuotedProfileRow = {
   user_number: number;
   display_name: string | null;
   username: string;
+  avatar_url: string | null;
 };
 
 type QuotedPostRow = {
@@ -59,6 +61,7 @@ export type QuotedPost = {
   userNumber: number;
   displayName: string | null;
   username: string | null;
+  avatarUrl: string | null;
 };
 
 export type MappedPost = {
@@ -71,6 +74,7 @@ export type MappedPost = {
   displayName: string | null;
   headline: string | null;
   username: string | null;
+  avatarUrl: string | null;
   isAnonymous: boolean;
   counts: Record<ReactionType, number>;
   mine: ReactionType | null;
@@ -103,6 +107,9 @@ export function mapPost(post: PostRow, currentUserId: string | null): MappedPost
     displayName: profile?.display_name ?? null,
     headline: profile?.headline ?? null,
     username: profile?.username ?? null,
+    // Never ship the author's avatar for an anonymous post — that's an
+    // identity leak even if the UI happens not to render it.
+    avatarUrl: post.is_anonymous ? null : profile?.avatar_url ?? null,
     isAnonymous: post.is_anonymous,
     counts,
     mine,
@@ -132,5 +139,6 @@ function mapQuotedPost(row: QuotedPostRow | QuotedPostRow[] | null): QuotedPost 
     userNumber: profile?.user_number ?? 0,
     displayName: profile?.display_name ?? null,
     username: profile?.username ?? null,
+    avatarUrl: quoted.is_anonymous ? null : profile?.avatar_url ?? null,
   };
 }

@@ -19,6 +19,7 @@ type NavProfile = {
   displayName: string | null;
   username: string | null;
   userNumber: number;
+  avatarUrl?: string | null;
 };
 
 function itemClass(active: boolean) {
@@ -56,7 +57,7 @@ function ProfileMenu({ profile }: { profile: NavProfile }) {
         aria-expanded={open}
         className="flex w-full items-center gap-3 rounded-full p-2 justify-center xl:justify-start hover:bg-surface transition-colors"
       >
-        <Avatar content="" size={32} />
+        <Avatar content="" size={32} src={profile.avatarUrl} />
         <span className="hidden min-w-0 flex-1 text-left xl:block">
           <span className="block truncate text-sm font-semibold">{name}</span>
           {profile.username && (

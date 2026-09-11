@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { checkUsernameAvailable } from "@/app/profile/actions";
@@ -19,15 +19,52 @@ function Wordmark({ size = "text-2xl" }: { size?: string }) {
   );
 }
 
+/**
+ * Error codes handed back by /auth/callback (Supabase's own `error_code`, or
+ * one of ours when the link arrives malformed).
+ */
+function describeAuthError(code: string | null): string | null {
+  if (!code) return null;
+  switch (code) {
+    case "otp_expired":
+      return "That magic link expired. They only last an hour — request a fresh one.";
+    case "access_denied":
+      return "That link was already used or revoked. Send yourself a new one.";
+    case "missing_code":
+    case "missing_type":
+      return "That link came back mangled — no login token in it. Try requesting another.";
+    case "flow_state_not_found":
+    case "flow_state_expired":
+    case "bad_code_verifier":
+    case "pkce_code_verifier_not_found":
+      return "Open the link in the same browser you requested it from — otherwise we can't finish the login.";
+    case "validation_failed":
+      return "The login link wasn't valid. Request a new one.";
+    default:
+      return "Couldn't finish signing you in. Request a new link and try again.";
+  }
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    describeAuthError(searchParams.get("error"))
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [magicLink, setMagicLink] = useState(false);
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,29 +201,34 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative mx-auto max-w-sm py-10">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-10 left-1/2 h-72 w-[130%] -translate-x-1/2 rounded-full opacity-20"
-        style={{ background: "var(--primary)", filter: "blur(90px)" }}
-      />
-
-      <div className="relative mb-6 flex items-center gap-2">
-        <Image src="/icon.png" alt="" width={30} height={30} className="h-[30px] w-[30px]" />
-        <Wordmark />
-      </div>
-
-      <div className="relative">
-        <h1 className="text-3xl font-extrabold text-primary">
+    <div className="relative mx-auto grid min-h-[calc(100dvh-10rem)] max-w-5xl items-center gap-10 py-10 lg:grid-cols-2 lg:gap-16">
+      <div className="relative flex flex-col justify-center">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/icon.png"
+            alt=""
+            width={48}
+            height={48}
+            className="h-12 w-12"
+          />
+          <Wordmark size="text-4xl" />
+        </div>
+        <h1 className="mt-8 text-4xl font-extrabold text-primary lg:text-5xl">
           Only Negativity Allowed.
         </h1>
-        <p className="mt-2 text-secondary text-sm">
+        <p className="mt-3 max-w-md text-base text-secondary">
           Log in to vent under a name, or skip it and stay a ghost.
         </p>
+      </div>
 
+      <div className="relative w-full max-w-md justify-self-center lg:max-w-none lg:justify-self-end">
         <div
-          className="mt-8 rounded-2xl border border-border p-5 shadow-[0_0_50px_-20px_var(--primary)]"
-        >
+          aria-hidden
+          className="pointer-events-none absolute -top-10 left-1/2 h-72 w-[130%] -translate-x-1/2 rounded-full opacity-20"
+          style={{ background: "var(--primary)", filter: "blur(90px)" }}
+        />
+
+        <div className="relative rounded-2xl border border-border p-5 shadow-[0_0_50px_-20px_var(--primary)]">
           <div
             className={`flex rounded-full border border-border p-0.5 mb-5 text-sm ${
               magicLink ? "opacity-40 pointer-events-none" : ""

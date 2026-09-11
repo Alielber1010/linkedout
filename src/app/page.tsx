@@ -19,7 +19,9 @@ export default async function Home({
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("default_anonymous, display_name, headline, username, user_number")
+      .select(
+        "default_anonymous, display_name, headline, username, user_number, avatar_url"
+      )
       .eq("id", user.id)
       .single();
 
@@ -29,6 +31,7 @@ export default async function Home({
       defaultAnonymous: profile?.default_anonymous ?? false,
       avatarSeed: user.id,
       avatarInitial: name.trim().charAt(0).toUpperCase() || "A",
+      avatarUrl: profile?.avatar_url ?? null,
       profileId: user.id,
       displayName: profile?.display_name ?? null,
       headline: profile?.headline ?? null,

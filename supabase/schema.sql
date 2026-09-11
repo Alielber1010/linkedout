@@ -16,6 +16,8 @@
 --   20260816093908  add_quoted_post_to_posts
 --   20260817104813  add_toggle_reaction_rpc
 --   20260817104852  add_toggle_repost_rpc
+--   20260817182820  add_profile_media_and_details
+--   20260817182837  add_profile_media_bucket
 --
 -- To make future changes safely: use the Supabase MCP `apply_migration` (or `supabase db query`
 -- once the CLI is linked), which writes a matching file under supabase/migrations/ — keep this
@@ -40,8 +42,16 @@ create table public.profiles (
   headline           text,
   username           text not null,
   default_anonymous  boolean not null default false,
+  bio                text,
+  location           text,
+  website            text,
+  avatar_url         text,
+  banner_url         text,
   constraint display_name_length check (display_name is null or (char_length(display_name) between 1 and 60)),
   constraint headline_length check (headline is null or (char_length(headline) between 1 and 120)),
+  constraint bio_length check (bio is null or (char_length(bio) between 1 and 160)),
+  constraint location_length check (location is null or (char_length(location) between 1 and 30)),
+  constraint website_length check (website is null or (char_length(website) between 1 and 200)),
   constraint profiles_username_key unique (username),
   constraint username_format check (username ~ '^[a-z0-9_]{3,20}$')
 );
@@ -308,3 +318,56 @@ create policy "users can insert their own reposts"
 create policy "users can delete their own reposts"
   on public.reposts for delete
   using ((select auth.uid()) = profile_id);
+
+-- ============================================================================
+-- Storage
+-- ============================================================================
+
+-- profile-media: avatars + banners. Public read (it backs public profiles);
+-- writes are restricted to objects under "<user-id>/..." because the browser
+-- uploads directly (Server Action bodies are capped at 1MB, so files can't
+-- round-trip through an action). Path convention:
+--   <user-id>/avatar-<timestamp>.<ext>
+--   <user-id>/banner-<timestamp>.<ext>
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'profile-media',
+  'profile-media',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do nothing;
+
+create policy "profile media is publicly readable"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'profile-media');
+
+create policy "users can upload their own profile media"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'profile-media'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+create policy "users can update their own profile media"
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'profile-media'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  )
+  with check (
+    bucket_id = 'profile-media'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+create policy "users can delete their own profile media"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'profile-media'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );

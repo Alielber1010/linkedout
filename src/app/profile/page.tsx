@@ -19,7 +19,9 @@ export default async function ProfilePage() {
   const [{ data: profile }, { data: companies }, { data: postRows }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("user_number, display_name, headline, username, created_at")
+      .select(
+        "user_number, display_name, headline, username, created_at, bio, location, website, avatar_url, banner_url"
+      )
       .eq("id", user.id)
       .single(),
     supabase
@@ -42,17 +44,19 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl overflow-hidden border border-border bg-surface">
-        <div className="h-20 bg-primary" />
-        <ProfileHeader
-          initial={initial}
-          userNumber={profile?.user_number}
-          createdAt={profile?.created_at ?? null}
-          initialDisplayName={profile?.display_name ?? ""}
-          initialHeadline={profile?.headline ?? ""}
-          initialUsername={profile?.username ?? ""}
-        />
-      </div>
+      <ProfileHeader
+        initial={initial}
+        userNumber={profile?.user_number}
+        createdAt={profile?.created_at ?? null}
+        initialDisplayName={profile?.display_name ?? ""}
+        initialHeadline={profile?.headline ?? ""}
+        initialUsername={profile?.username ?? ""}
+        initialBio={profile?.bio ?? ""}
+        initialLocation={profile?.location ?? ""}
+        initialWebsite={profile?.website ?? ""}
+        initialAvatarUrl={profile?.avatar_url ?? null}
+        initialBannerUrl={profile?.banner_url ?? null}
+      />
 
       <div className="rounded-xl border border-border bg-surface p-5">
         <CompanyHistory initialEntries={companies ?? []} />

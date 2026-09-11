@@ -20,6 +20,7 @@ export function ComposeBox({
   defaultAnonymous = false,
   avatarSeed,
   avatarInitial,
+  avatarUrl = null,
   profileId,
   displayName,
   headline,
@@ -31,6 +32,7 @@ export function ComposeBox({
   defaultAnonymous?: boolean;
   avatarSeed: string;
   avatarInitial: string;
+  avatarUrl?: string | null;
   profileId: string;
   displayName: string | null;
   headline: string | null;
@@ -135,6 +137,9 @@ export function ComposeBox({
         displayName,
         headline,
         username,
+        // Mirrors the server mapping: an anonymous post never carries the
+        // author's avatar.
+        avatarUrl: isAnonymous ? null : avatarUrl,
         isAnonymous,
         counts: { ...EMPTY_REACTION_COUNTS },
         mine: null,
@@ -171,7 +176,7 @@ export function ComposeBox({
     >
       <form ref={formRef} action={handleSubmit}>
         <div className="flex gap-3">
-          <Avatar seed={avatarSeed} content={avatarInitial} size={40} />
+          <Avatar seed={avatarSeed} content={avatarInitial} size={40} src={avatarUrl} />
 
           <div className="min-w-0 flex-1">
             <textarea

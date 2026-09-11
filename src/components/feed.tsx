@@ -14,6 +14,7 @@ type ComposerConfig = {
   defaultAnonymous: boolean;
   avatarSeed: string;
   avatarInitial: string;
+  avatarUrl?: string | null;
   profileId: string;
   displayName: string | null;
   headline: string | null;

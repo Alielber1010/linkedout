@@ -43,6 +43,7 @@ export function LinkAccountForm() {
       <input
         type="email"
         required
+        aria-label="Email"
         placeholder="you@notmycurrentemployer.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -52,6 +53,7 @@ export function LinkAccountForm() {
         type="password"
         required
         minLength={6}
+        aria-label="Password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
