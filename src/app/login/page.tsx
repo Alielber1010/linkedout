@@ -201,36 +201,37 @@ function LoginForm() {
   }
 
   return (
-    <div className="relative mx-auto grid min-h-[calc(100dvh-10rem)] max-w-5xl items-center gap-10 py-10 lg:grid-cols-2 lg:gap-16">
-      <div className="relative flex flex-col justify-center">
-        <div className="flex items-center gap-3">
+    <div className="relative mx-auto grid min-h-[calc(100dvh-10rem)] max-w-5xl items-start gap-10 py-10 lg:grid-cols-2 lg:gap-16">
+      <div className="relative flex flex-col justify-center pt-4 lg:pt-8">
+        <div className="flex flex-col gap-4">
           <Image
             src="/icon.png"
             alt=""
-            width={48}
-            height={48}
-            className="h-12 w-12"
+            width={128}
+            height={128}
+            className="h-24 w-24 sm:h-28 sm:w-28 lg:h-32 lg:w-32"
+            priority
           />
-          <Wordmark size="text-4xl" />
+          <Wordmark size="text-5xl sm:text-6xl lg:text-7xl" />
         </div>
-        <h1 className="mt-8 text-4xl font-extrabold text-primary lg:text-5xl">
+        <h1 className="mt-8 text-2xl font-extrabold text-primary sm:text-3xl lg:text-4xl">
           Only Negativity Allowed.
         </h1>
-        <p className="mt-3 max-w-md text-base text-secondary">
+        <p className="mt-3 max-w-md text-sm text-secondary sm:text-base">
           Log in to vent under a name, or skip it and stay a ghost.
         </p>
       </div>
 
-      <div className="relative w-full max-w-md justify-self-center lg:max-w-none lg:justify-self-end">
+      <div className="relative w-full max-w-xs justify-self-center pt-8 sm:max-w-sm lg:mt-20 lg:max-w-[340px] lg:justify-self-end lg:pt-0">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-10 left-1/2 h-72 w-[130%] -translate-x-1/2 rounded-full opacity-20"
-          style={{ background: "var(--primary)", filter: "blur(90px)" }}
+          className="pointer-events-none absolute -top-6 left-1/2 h-56 w-[120%] -translate-x-1/2 rounded-full opacity-20"
+          style={{ background: "var(--primary)", filter: "blur(80px)" }}
         />
 
-        <div className="relative rounded-2xl border border-border p-5 shadow-[0_0_50px_-20px_var(--primary)]">
+        <div className="relative rounded-2xl border border-border p-4 shadow-[0_0_40px_-20px_var(--primary)]">
           <div
-            className={`flex rounded-full border border-border p-0.5 mb-5 text-sm ${
+            className={`mb-4 flex rounded-full border border-border p-0.5 text-xs sm:text-sm ${
               magicLink ? "opacity-40 pointer-events-none" : ""
             }`}
           >
@@ -260,7 +261,7 @@ function LoginForm() {
 
           <form
             onSubmit={magicLink ? handleMagicLink : handleSubmit}
-            className="space-y-3"
+            className="space-y-2.5"
           >
             <div>
               <input
@@ -366,7 +367,7 @@ function LoginForm() {
             </button>
           </form>
 
-          <div className="my-4 flex items-center gap-3 text-xs text-secondary">
+          <div className="my-3 flex items-center gap-3 text-xs text-secondary">
             <span className="h-px flex-1 bg-border" />
             or
             <span className="h-px flex-1 bg-border" />
